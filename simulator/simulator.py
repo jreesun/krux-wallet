@@ -196,7 +196,7 @@ if args.screenshot_scale:
 
 if args.device == devices.PC:
     from kruxsim.mocks.board import BOARD_CONFIG
-    BOARD_CONFIG["type"] = "amigo_like"
+    BOARD_CONFIG["type"] = "amigo"
 
 t.start()
 

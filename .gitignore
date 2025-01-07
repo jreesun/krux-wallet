@@ -81,3 +81,4 @@ simulator/sd
 
 # ignore build-release files
 krux-*/ktool*
+kapps/*.sig

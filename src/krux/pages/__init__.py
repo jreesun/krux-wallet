@@ -450,6 +450,11 @@ class Page:
         except:
             return False
 
+    def shutdown_menu_item(self, ctx):
+        """Returns the Shutdown or Reboot Menu item"""
+        label = t("Shutdown") if ctx.power_manager.has_battery() else t("Reboot")
+        return (label, self.shutdown)
+
     def shutdown(self):
         """Handler for the 'shutdown' menu item"""
         if self.prompt(t("Are you sure?"), self.ctx.display.height() // 2):

@@ -173,6 +173,29 @@ def sha256(firmware_filename, firmware_size=None):
     return hasher.digest()
 
 
+def check_signature(pubkey, sig, file_hash):
+    """Return if signature of the file_hash is valid for the pubkey"""
+
+    try:
+        # Parse, serialize, and reparse to ensure signature is compact prior to verification
+        sig = ec.Signature.parse(ec.Signature.parse(sig).serialize())
+        if not pubkey.verify(sig, file_hash):
+            return False
+    except:
+        return False
+
+    return True
+
+
+def get_pubkey():
+    """Construct the pubkey based on Krux metadata pubkey string"""
+
+    try:
+        return ec.PublicKey.from_string(SIGNER_PUBKEY)
+    except:
+        return None
+
+
 def upgrade():
     """Installs new firmware from SD card"""
 
@@ -224,10 +247,8 @@ def upgrade():
         )
         return False
 
-    pubkey = None
-    try:
-        pubkey = ec.PublicKey.from_string(SIGNER_PUBKEY)
-    except:
+    pubkey = get_pubkey()
+    if pubkey is None:
         display.flash_text("Invalid public key", theme.error_color)
         return False
 
@@ -239,13 +260,7 @@ def upgrade():
         display.flash_text(t("Missing signature file"), theme.error_color)
         return False
 
-    try:
-        # Parse, serialize, and reparse to ensure signature is compact prior to verification
-        sig = ec.Signature.parse(ec.Signature.parse(sig).serialize())
-        if not pubkey.verify(sig, firmware_hash):
-            display.flash_text(t("Bad signature"), theme.error_color)
-            return False
-    except:
+    if not check_signature(pubkey, sig, firmware_hash):
         display.flash_text(t("Bad signature"), theme.error_color)
         return False
 

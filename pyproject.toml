@@ -71,7 +71,7 @@ flash = ["pyserial"]
 # format tasks
 format-src = "black src"
 format-tests = "black tests"
-format-scripts = "black firmware/font firmware/scripts i18n/*.py"
+format-scripts = "black firmware/font firmware/scripts i18n/*.py kapps/*.py"
 format = ["format-src", "format-tests", "format-scripts"]
 # aliases
 black.ref = "format"
@@ -79,7 +79,7 @@ format-test.ref = "format-tests"
 
 # pylint tasks
 lint-src = "pylint src"
-lint-scripts = "pylint firmware/font/*.py firmware/scripts/*.py i18n/*.py"
+lint-scripts = "pylint firmware/font/*.py firmware/scripts/*.py i18n/*.py kapps/*.py"
 lint = ["lint-src", "lint-scripts"]
 # aliases
 pylint.ref = "lint"
@@ -130,6 +130,13 @@ git-pull-https = "git pull https://github.com/selfcustody/krux.git"
 flash-cmd = "python firmware/Kboot/build/ktool.py -b 1500000 build/kboot.kfpkg"
 flash.ref = "flash-cmd -B goE"
 flash-dock.ref = "flash-cmd -B dan"
+
+# kapps tasks
+mpy = "./firmware/MaixPy/components/micropython/core/mpy-cross/mpy-cross"
+mpy-all = "find kapps/*.py -type f -exec './firmware/MaixPy/components/micropython/core/mpy-cross/mpy-cross' {} \\;"
+# aliases
+mpy-cross.ref = "mpy"
+mpy-cross-all.ref = "mpy-all"
 
 # task for bdftokff?
 # python bdftokff.py True

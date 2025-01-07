@@ -26,9 +26,6 @@ import time
 import gc
 import os
 
-sys.path.append("")
-sys.path.append(".")
-
 from krux.power import power_manager
 
 MIN_SPLASH_WAIT_TIME = 1000

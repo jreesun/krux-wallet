@@ -1,0 +1,45 @@
+include _wait-for-logo.txt
+
+# Navigate to settings
+x2 press BUTTON_B
+press BUTTON_A
+
+# Navigate to security
+x4 press BUTTON_C
+press BUTTON_A
+
+# Navigate to tamper check code
+x2 press BUTTON_C
+press BUTTON_A
+
+# Yes - enter tc code
+press BUTTON_A
+
+# 6x number 1 and go
+x6 press BUTTON_A
+press BUTTON_C
+press BUTTON_A
+
+# confirm same - 6x number 1 and go
+x6 press BUTTON_A
+press BUTTON_C
+press BUTTON_A
+
+# wait flash msg
+wait 2
+
+# cancel fill flash
+press BUTTON_B
+press_amigo_only BUTTON_A
+
+screenshot tc-flash-hash-boot-enable.png
+
+# cancel enable boot
+press BUTTON_B
+press_amigo_only BUTTON_A
+
+# wait processing...
+wait 1
+
+# take photo of hash
+screenshot tc-flash-hash.png

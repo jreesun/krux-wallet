@@ -37,18 +37,22 @@ from ..sd_card import SDHandler
 from ..display import BOTTOM_PROMPT_LINE
 from ..krux_settings import t
 from ..qr import FORMAT_NONE
+import sys
 
 
 class Tools(Page):
     """Krux generic tools"""
 
     def __init__(self, ctx):
+        self.ctx = ctx
+
         super().__init__(
             ctx,
             Menu(
                 ctx,
                 [
                     (t("Check SD Card"), self.sd_check),
+                    (t("Load Krux app"), self.load_krux_app),
                     (t("Print Test QR"), self.print_test),
                     (t("Create QR Code"), self.create_qr),
                     (t("Descriptor Addresses"), self.descriptor_addresses),
@@ -57,7 +61,26 @@ class Tools(Page):
                 ],
             ),
         )
-        self.ctx = ctx
+
+    def load_krux_app(self):
+        """Handler for the 'Load Krux app' menu item"""
+
+        # Check if Krux app is enabled
+        from krux.krux_settings import Settings
+
+        if not Settings().security.allow_kapp:
+            self.flash_error(t("Allow in settings first!"))
+            return MENU_CONTINUE
+
+        from krux.pages.kapps import Kapps
+
+        Kapps(self.ctx).run()
+
+        # Unimport kapps
+        sys.modules.pop("krux.pages.kapps")
+        del sys.modules["krux.pages"].kapps
+
+        return MENU_CONTINUE
 
     def flash_tools(self):
         """Handler for the 'Flash Tools' menu item"""

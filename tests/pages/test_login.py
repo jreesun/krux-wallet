@@ -103,7 +103,7 @@ def test_tools_menu(m5stickv, mocker):
 
     BTN_SEQUENCE = (
         # Back
-        [BUTTON_PAGE] * 6
+        [BUTTON_PAGE] * 7
         + [BUTTON_ENTER]
     )
 

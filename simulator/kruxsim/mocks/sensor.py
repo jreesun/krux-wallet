@@ -88,7 +88,8 @@ def run(on):
     if on:
         capturer = VideoCapture(0)
     else:
-        capturer.release()
+        if capturer:
+            capturer.release()
 
 
 def find_qrcodes(img):

@@ -25,7 +25,10 @@ old_open = open
 
 
 def new_open(path, *args, **kwargs):
-    path = path.lstrip("/") if path.startswith("/sd") else path
+    if path.startswith("/sd"):
+        path = path.lstrip("/")
+    elif path.startswith("/flash"):
+        path = path.replace("/flash", "sd")
     return old_open(path, *args, **kwargs)
 
 

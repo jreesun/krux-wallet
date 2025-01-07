@@ -43,9 +43,6 @@ class Home(Page):
     """Home is the main menu page of the app"""
 
     def __init__(self, ctx):
-        shtn_reboot_label = (
-            t("Shutdown") if ctx.power_manager.has_battery() else t("Reboot")
-        )
         super().__init__(
             ctx,
             Menu(
@@ -63,7 +60,7 @@ class Home(Page):
                     (t("Wallet"), self.wallet),
                     (t("Address"), self.addresses_menu),
                     (t("Sign"), self.sign),
-                    (shtn_reboot_label, self.shutdown),
+                    self.shutdown_menu_item(ctx),
                 ],
                 back_label=None,
             ),

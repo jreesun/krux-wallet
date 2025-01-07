@@ -54,7 +54,7 @@ class ScreenSaver:
                     SPLASH[anim_frame - initial_offset], offset_y, fg_color, bg_color
                 )
             anim_frame += 1
-            if anim_frame > len(SPLASH) + 2 * initial_offset:
+            if anim_frame > len(SPLASH) + (2 * initial_offset) + 1:
                 anim_frame = 0
                 bg_color, fg_color = fg_color, bg_color
             # wait_duration(animation period) can be modified here

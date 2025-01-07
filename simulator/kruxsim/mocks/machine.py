@@ -69,8 +69,11 @@ class SDCard:
     def remount():
         pass
 
+def unique_id():
+    return b'\xbc\x8d{%\x8e^\xc5Q\xb3N\x07f\x9f\xde\xbbG7\xddFK^\xdc\xdb\xbc\xb4E\x14A~3\x91\x12'
+
 
 if "machine" not in sys.modules:
     sys.modules["machine"] = mock.MagicMock(
-        reset=reset, UART=mock.MagicMock(wraps=UART), SDCard=SDCard
+        reset=reset, UART=mock.MagicMock(wraps=UART), SDCard=SDCard, unique_id=unique_id
     )

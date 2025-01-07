@@ -28,12 +28,12 @@ import hashlib
 import ucryptolib
 from .baseconv import base_encode, base_decode
 from .sd_card import SDHandler
-from .krux_settings import Settings, PBKDF2_HMAC_ECB, PBKDF2_HMAC_CBC
+from .krux_settings import Settings, PBKDF2_HMAC_ECB, PBKDF2_HMAC_CBC, FLASH_PATH
 from embit.wordlists.bip39 import WORDLIST
 
 
 MNEMONICS_FILE = "seeds.json"
-FLASH_PATH = "/flash/"
+FLASH_PATH = "/" + FLASH_PATH + "/"
 
 VERSION_MODE = {
     "AES-ECB": ucryptolib.MODE_ECB,

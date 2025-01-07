@@ -23,17 +23,29 @@ import os
 
 old_listdir = os.listdir
 old_remove = os.remove
+old_chdir = os.chdir
 
 
 def new_listdir(path, *args, **kwargs):
-    path = path.lstrip("/") if path.startswith("/sd") else path
+    if path.startswith("/sd"):
+        path = path.lstrip("/")
+    elif path.startswith("/flash"):
+        path = path.replace("/flash", "sd")
     return old_listdir(path, *args, **kwargs)
 
 
 def new_remove(path, *args, **kwargs):
-    path = path.lstrip("/") if path.startswith("/sd") else path
+    if path.startswith("/sd"):
+        path = path.lstrip("/")
+    elif path.startswith("/flash"):
+        return
     return old_remove(path, *args, **kwargs)
+
+# Avoid Krux code to change simulator execution dir
+def new_chdir(path):
+    return
 
 
 setattr(os, "listdir", new_listdir)
 setattr(os, "remove", new_remove)
+setattr(os, "chdir", new_chdir)
