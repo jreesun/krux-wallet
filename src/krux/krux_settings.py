@@ -306,16 +306,25 @@ class DisplaySettings(SettingsNamespace):
     """Custom display settings for Maix Cube"""
 
     namespace = "settings.display"
-    default_brightness = "1" if board.config["type"] == "m5stickv" else "3"
-    brightness = CategorySetting(
-        "brightness", default_brightness, ["1", "2", "3", "4", "5"]
-    )
+    if board.config["type"] in ["cube", "m5stickv", "wonder_mv"]:
+        default_brightness = "1" if board.config["type"] == "m5stickv" else "3"
+        brightness = CategorySetting(
+            "brightness", default_brightness, ["1", "2", "3", "4", "5"]
+        )
+    if board.config["type"] in ["yahboom", "wonder_mv"]:
+        flipped_orientation = CategorySetting(
+            "flipped_orientation", False, [False, True]
+        )
 
     def label(self, attr):
         """Returns a label for UI when given a setting name or namespace"""
-        return {
-            "brightness": t("Brightness"),
-        }[attr]
+        options = {}
+        if board.config["type"] in ["wonder_mv", "cube", "m5stickv"]:
+            options["brightness"] = t("Brightness")
+        if board.config["type"] in ["wonder_mv", "yahboom"]:
+            options["flipped_orientation"] = t("Flipped Orientation")
+
+        return options[attr]
 
 
 class HardwareSettings(SettingsNamespace):
@@ -330,7 +339,7 @@ class HardwareSettings(SettingsNamespace):
             self.touch = TouchSettings()
         if board.config["type"] == "amigo":
             self.display = DisplayAmgSettings()
-        elif board.config["type"] in ["cube", "m5stickv", "wonder_mv"]:
+        elif board.config["type"] in ["cube", "m5stickv", "wonder_mv", "yahboom"]:
             self.display = DisplaySettings()
 
     def label(self, attr):
@@ -344,7 +353,7 @@ class HardwareSettings(SettingsNamespace):
             hardware_menu["touchscreen"] = t("Touchscreen")
         if board.config["type"] == "amigo":
             hardware_menu["display_amg"] = t("Display")
-        elif board.config["type"] in ["cube", "m5stickv", "wonder_mv"]:
+        elif board.config["type"] in ["cube", "m5stickv", "wonder_mv", "yahboom"]:
             hardware_menu["display"] = t("Display")
 
         return hardware_menu[attr]

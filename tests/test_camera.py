@@ -118,6 +118,7 @@ def test_toggle_antiglare(mocker, m5stickv):
         GC2145_ID,
         QR_SCAN_MODE,
         ANTI_GLARE_MODE,
+        ZOOMED_MODE,
     )
 
     SENSORS_LIST = [OV7740_ID, OV2640_ID, GC0328_ID, GC2145_ID]
@@ -129,7 +130,9 @@ def test_toggle_antiglare(mocker, m5stickv):
         c.initialize_sensor()
         if c.has_antiglare():
             assert c.mode == QR_SCAN_MODE
-            c.toggle_antiglare()
+            c.toggle_camera_mode()
             assert c.mode == ANTI_GLARE_MODE
-            c.toggle_antiglare()
+            c.toggle_camera_mode()
+            assert c.mode == ZOOMED_MODE
+            c.toggle_camera_mode()
             assert c.mode == QR_SCAN_MODE

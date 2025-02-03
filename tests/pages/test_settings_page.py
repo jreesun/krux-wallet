@@ -172,12 +172,35 @@ def test_change_brightness(bkl_control_devices, mocker):
         *([BUTTON_PAGE_PREV] * 3),  # Move to "Back"
         BUTTON_ENTER,  # Confirm "Back"
     ]
-    ctx = create_ctx(mocker, BTN_SEQUENCE)
+    BTN_SEQUENCE_WONDER_MV = [
+        *([BUTTON_PAGE] * 2),  # Move to "Hardware"
+        BUTTON_ENTER,  # Enter "Hardware"
+        BUTTON_PAGE,  # Move to "Display"
+        BUTTON_ENTER,  # Enter "Display"
+        BUTTON_ENTER,  # Enter "Brightness"
+        BUTTON_PAGE,  # Change "Brightness"
+        BUTTON_ENTER,  # Enter "Brightness"
+        BUTTON_PAGE_PREV,  # Move to "Back"
+        BUTTON_ENTER,  # Confirm "Back"
+        *([BUTTON_PAGE_PREV] * 2),  # Move to "Back"
+        BUTTON_ENTER,  # Confirm "Back"
+        *([BUTTON_PAGE_PREV] * 3),  # Move to "Back"
+        BUTTON_ENTER,  # Confirm "Back"
+    ]
+    if board.config["type"] == "wonder_mv":
+        ctx = create_ctx(mocker, BTN_SEQUENCE_WONDER_MV)
+    else:
+        ctx = create_ctx(mocker, BTN_SEQUENCE)
     settings_page = SettingsPage(ctx)
     previous_brightness = int(Settings().hardware.display.brightness)
     settings_page.settings()
 
-    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE)
+    len_sequence = (
+        len(BTN_SEQUENCE)
+        if board.config["type"] != "wonder_mv"
+        else len(BTN_SEQUENCE_WONDER_MV)
+    )
+    assert ctx.input.wait_for_button.call_count == len_sequence
     assert Settings().hardware.display.brightness == str(previous_brightness + 1)
 
 
