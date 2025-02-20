@@ -92,26 +92,33 @@ def test_qr_passphrase_fail(m5stickv, mocker):
     qr_capturer.assert_called_once()
 
 
-def test_change_multisig_changes(m5stickv, mocker, tdata):
+def test_change_policy_types(m5stickv, mocker, tdata):
     from krux.pages.wallet_settings import WalletSettings
     from krux.wallet import Wallet
-    from krux.key import Key
+    from krux.key import Key, TYPE_SINGLESIG, TYPE_MULTISIG, TYPE_MINISCRIPT
     from krux.pages import BUTTON_ENTER, BUTTON_PAGE, BUTTON_PAGE_PREV
 
-    BTN_SEQUENCE_1 = [
-        BUTTON_PAGE,  # Go to "Single/Multisig"
-        BUTTON_ENTER,  # Enter "Single/Multisig"
+    BTN_SEQUENCE = [
+        BUTTON_PAGE,  # Go to "Policy Type"
+        BUTTON_ENTER,  # Enter "Policy Type"
         BUTTON_PAGE,  # Change to Multisig
         BUTTON_ENTER,  # Confirm Multisig
         BUTTON_PAGE_PREV,  # Go to Back
         BUTTON_ENTER,  # Leave
     ]
 
-    ctx = create_ctx(mocker, BTN_SEQUENCE_1, Wallet(tdata.SINGLESIG_12_WORD_KEY))
+    ctx = create_ctx(mocker, BTN_SEQUENCE, Wallet(tdata.SINGLESIG_12_WORD_KEY))
+
+    # assert wallet starts as single-sig, native segwit
+    assert ctx.wallet.is_multisig() is False
+    assert ctx.wallet.is_miniscript() is False
+    assert ctx.wallet.key.policy_type == TYPE_SINGLESIG
+    assert ctx.wallet.key.script_type == "p2wpkh"
+
     mnemonic = ctx.wallet.key.mnemonic
     wallet_settings = WalletSettings(ctx)
-    network, policy_type, script_type, account = wallet_settings.customize_wallet(
-        ctx.wallet.key
+    network, policy_type, script_type, account, derivation_path = (
+        wallet_settings.customize_wallet(ctx.wallet.key)
     )
     ctx.wallet = Wallet(
         Key(
@@ -121,13 +128,52 @@ def test_change_multisig_changes(m5stickv, mocker, tdata):
             "",  # passphrase
             account,
             script_type,
+            derivation_path,
         )
     )
 
+    # Assert wallet is now multisig and changed to p2wsh
     assert ctx.wallet.is_multisig() is True
+    assert ctx.wallet.is_miniscript() is False
+    assert ctx.wallet.key.policy_type == TYPE_MULTISIG
+    assert ctx.wallet.key.script_type == "p2wsh"
+    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE)
+
+    # Change to miniscript
+    BTN_SEQUENCE = [
+        BUTTON_PAGE,  # Go to "Policy Type"
+        BUTTON_ENTER,  # Enter "Policy Type"
+        *([BUTTON_PAGE] * 2),  # Change to Miniscript
+        BUTTON_ENTER,  # Confirm Miniscript
+        BUTTON_PAGE_PREV,  # Go to Back
+        BUTTON_ENTER,  # Leave
+    ]
+    ctx = create_ctx(mocker, BTN_SEQUENCE, ctx.wallet)
+    wallet_settings = WalletSettings(ctx)
+    network, policy_type, script_type, account, derivation_path = (
+        wallet_settings.customize_wallet(ctx.wallet.key)
+    )
+    ctx.wallet = Wallet(
+        Key(
+            mnemonic,
+            policy_type,
+            network,
+            "",  # passphrase
+            account,
+            script_type,
+            derivation_path,
+        )
+    )
+
+    # Assert wallet is now miniscript and remained p2wsh
+    assert ctx.wallet.is_multisig() is False
+    assert ctx.wallet.is_miniscript() is True
+    assert ctx.wallet.key.policy_type == TYPE_MINISCRIPT
+    assert ctx.wallet.key.script_type == "p2wsh"
+    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE)
 
     # Change back to singlesig
-    BTN_SEQUENCE_2 = [
+    BTN_SEQUENCE = [
         BUTTON_PAGE,  # Go to "Single/Multisig"
         BUTTON_ENTER,  # Enter "Single/Multisig"
         BUTTON_ENTER,  # Confirm Single
@@ -136,10 +182,11 @@ def test_change_multisig_changes(m5stickv, mocker, tdata):
         BUTTON_PAGE_PREV,  # Go to Back
         BUTTON_ENTER,  # Leave
     ]
-    ctx = create_ctx(mocker, BTN_SEQUENCE_2, ctx.wallet)
+
+    ctx = create_ctx(mocker, BTN_SEQUENCE, ctx.wallet)
     wallet_settings = WalletSettings(ctx)
-    network, policy_type, script_type, account = wallet_settings.customize_wallet(
-        ctx.wallet.key
+    network, policy_type, script_type, account, derivation_path = (
+        wallet_settings.customize_wallet(ctx.wallet.key)
     )
     ctx.wallet = Wallet(
         Key(
@@ -149,9 +196,48 @@ def test_change_multisig_changes(m5stickv, mocker, tdata):
             "",  # passphrase
             account,
             script_type,
+            derivation_path,
         )
     )
     assert ctx.wallet.is_multisig() is False
+    assert ctx.wallet.is_miniscript() is False
+    assert ctx.wallet.key.policy_type == TYPE_SINGLESIG
+    assert ctx.wallet.key.script_type == "p2wpkh"
+    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE)
+
+    # Going from single-sig to miniscript forces to change to script type
+    BTN_SEQUENCE = [
+        BUTTON_PAGE,  # Go to "Policy Type"
+        BUTTON_ENTER,  # Enter "Policy Type"
+        *([BUTTON_PAGE] * 2),  # Change to Miniscript
+        BUTTON_ENTER,  # Confirm Miniscript
+        BUTTON_PAGE,  # Change from Native Segwit to Taproot
+        BUTTON_ENTER,  # Confirm Taproot
+        BUTTON_PAGE_PREV,  # Go to Back
+        BUTTON_ENTER,  # Leave
+    ]
+
+    ctx = create_ctx(mocker, BTN_SEQUENCE, ctx.wallet)
+    wallet_settings = WalletSettings(ctx)
+    network, policy_type, script_type, account, derivation_path = (
+        wallet_settings.customize_wallet(ctx.wallet.key)
+    )
+    ctx.wallet = Wallet(
+        Key(
+            mnemonic,
+            policy_type,
+            network,
+            "",  # passphrase
+            account,
+            script_type,
+            derivation_path,
+        )
+    )
+    assert ctx.wallet.is_multisig() is False
+    assert ctx.wallet.is_miniscript() is True
+    assert ctx.wallet.key.policy_type == TYPE_MINISCRIPT
+    assert ctx.wallet.key.script_type == "p2tr"
+    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE)
 
 
 def test_change_script_type(m5stickv, mocker, tdata):
@@ -168,12 +254,11 @@ def test_change_script_type(m5stickv, mocker, tdata):
         BUTTON_PAGE_PREV,  # Go to Back
         BUTTON_ENTER,  # Leave
     ]
-
     ctx = create_ctx(mocker, BTN_SEQUENCE_1, Wallet(tdata.SINGLESIG_12_WORD_KEY))
     mnemonic = ctx.wallet.key.mnemonic
     wallet_settings = WalletSettings(ctx)
-    network, policy_type, script_type, account = wallet_settings.customize_wallet(
-        ctx.wallet.key
+    network, policy_type, script_type, account, derivation_path = (
+        wallet_settings.customize_wallet(ctx.wallet.key)
     )
     ctx.wallet = Wallet(
         Key(
@@ -187,6 +272,7 @@ def test_change_script_type(m5stickv, mocker, tdata):
     )
 
     assert ctx.wallet.key.script_type == "p2tr"
+    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE_1)
 
     # Change back to legacy
     BTN_SEQUENCE_2 = [
@@ -198,8 +284,8 @@ def test_change_script_type(m5stickv, mocker, tdata):
     ]
     ctx = create_ctx(mocker, BTN_SEQUENCE_2, ctx.wallet)
     wallet_settings = WalletSettings(ctx)
-    network, policy_type, script_type, account = wallet_settings.customize_wallet(
-        ctx.wallet.key
+    network, policy_type, script_type, account, derivation_path = (
+        wallet_settings.customize_wallet(ctx.wallet.key)
     )
     ctx.wallet = Wallet(
         Key(
@@ -212,6 +298,7 @@ def test_change_script_type(m5stickv, mocker, tdata):
         )
     )
     assert ctx.wallet.key.script_type == "p2pkh"
+    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE_2)
 
 
 def test_change_account(m5stickv, mocker, tdata):
@@ -230,12 +317,11 @@ def test_change_account(m5stickv, mocker, tdata):
         BUTTON_PAGE_PREV,  # Go to Back
         BUTTON_ENTER,  # Leave
     ]
-
     ctx = create_ctx(mocker, BTN_SEQUENCE_1, Wallet(tdata.SINGLESIG_12_WORD_KEY))
     mnemonic = ctx.wallet.key.mnemonic
     wallet_settings = WalletSettings(ctx)
-    network, policy_type, script_type, account = wallet_settings.customize_wallet(
-        ctx.wallet.key
+    network, policy_type, script_type, account, derivation_path = (
+        wallet_settings.customize_wallet(ctx.wallet.key)
     )
     ctx.wallet = Wallet(
         Key(
@@ -249,6 +335,7 @@ def test_change_account(m5stickv, mocker, tdata):
     )
 
     assert ctx.wallet.key.account_index == 2
+    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE_1)
 
     # Change back to account 0
     BTN_SEQUENCE_2 = [
@@ -265,8 +352,8 @@ def test_change_account(m5stickv, mocker, tdata):
     ]
     ctx = create_ctx(mocker, BTN_SEQUENCE_2, ctx.wallet)
     wallet_settings = WalletSettings(ctx)
-    network, policy_type, script_type, account = wallet_settings.customize_wallet(
-        ctx.wallet.key
+    network, policy_type, script_type, account, derivation_path = (
+        wallet_settings.customize_wallet(ctx.wallet.key)
     )
     ctx.wallet = Wallet(
         Key(
@@ -279,6 +366,7 @@ def test_change_account(m5stickv, mocker, tdata):
         )
     )
     assert ctx.wallet.key.account_index == 0
+    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE_2)
 
 
 def test_change_account_esc(m5stickv, mocker, tdata):
@@ -300,8 +388,8 @@ def test_change_account_esc(m5stickv, mocker, tdata):
     ctx = create_ctx(mocker, BTN_SEQUENCE_1, Wallet(tdata.SINGLESIG_12_WORD_KEY))
     mnemonic = ctx.wallet.key.mnemonic
     wallet_settings = WalletSettings(ctx)
-    network, policy_type, script_type, account = wallet_settings.customize_wallet(
-        ctx.wallet.key
+    network, policy_type, script_type, account, derivation_path = (
+        wallet_settings.customize_wallet(ctx.wallet.key)
     )
     ctx.wallet = Wallet(
         Key(
@@ -314,6 +402,7 @@ def test_change_account_esc(m5stickv, mocker, tdata):
         )
     )
     assert ctx.wallet.key.account_index == 0
+    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE_1)
 
 
 def test_account_out_of_range(m5stickv, mocker, tdata):
@@ -337,8 +426,8 @@ def test_account_out_of_range(m5stickv, mocker, tdata):
     mnemonic = ctx.wallet.key.mnemonic
     wallet_settings = WalletSettings(ctx)
     wallet_settings.flash_error = mocker.MagicMock()
-    network, policy_type, script_type, account = wallet_settings.customize_wallet(
-        ctx.wallet.key
+    network, policy_type, script_type, account, derivation_path = (
+        wallet_settings.customize_wallet(ctx.wallet.key)
     )
     ctx.wallet = Wallet(
         Key(
@@ -355,3 +444,101 @@ def test_account_out_of_range(m5stickv, mocker, tdata):
         "Value 22222222222 out of range: [0, 2147483647]"
     )
     assert ctx.wallet.key.account_index == 0
+    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE_1)
+
+
+def test_change_derivation_path(amigo, mocker, tdata):
+    from krux.pages.wallet_settings import WalletSettings
+    from krux.wallet import Wallet
+    from krux.key import Key
+    from krux.pages import BUTTON_ENTER, BUTTON_PAGE, BUTTON_PAGE_PREV
+
+    BTN_SEQUENCE = [
+        BUTTON_PAGE,  # Go to "Policy Type"
+        BUTTON_ENTER,  # Enter "Policy Type"
+        *([BUTTON_PAGE] * 2),  # Change to Miniscript
+        BUTTON_ENTER,  # Confirm Miniscript
+        BUTTON_PAGE,  # Change from Native Segwit to Taproot
+        BUTTON_ENTER,  # Confirm Taproot
+        *([BUTTON_PAGE] * 3),  # Go to "Derivation Path"
+        BUTTON_ENTER,  # Enter "Derivation Path"
+        *([BUTTON_PAGE_PREV] * 3),  # Move to "Del"
+        *([BUTTON_ENTER] * 2),  # Del "2h" from the derivation path
+        *([BUTTON_PAGE] * 2),  # Move to "Go"
+        BUTTON_ENTER,  # Go
+        # Get invalid derivation path (m/48h/0h/0h/), we need to delete trailing "/"
+        *([BUTTON_PAGE_PREV] * 3),  # Move to "Del" again
+        BUTTON_ENTER,  # Del "/"
+        *([BUTTON_PAGE] * 2),  # Move to "Go"
+        BUTTON_ENTER,  # Go
+        BUTTON_PAGE_PREV,  # Go to Back
+        BUTTON_ENTER,  # Leave
+    ]
+
+    ctx = create_ctx(mocker, BTN_SEQUENCE, Wallet(tdata.SINGLESIG_12_WORD_KEY))
+    mnemonic = ctx.wallet.key.mnemonic
+    wallet_settings = WalletSettings(ctx)
+    network, policy_type, script_type, account, derivation_path = (
+        wallet_settings.customize_wallet(ctx.wallet.key)
+    )
+    ctx.wallet = Wallet(
+        Key(
+            mnemonic,
+            policy_type,
+            network,
+            "",  # passphrase
+            account,
+            script_type,
+            derivation_path,
+        )
+    )
+
+    assert ctx.wallet.key.derivation_str() == "m/48h/0h/0h"
+    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE)
+
+
+def test_change_derivation_path_not_hardened_node(amigo, mocker, tdata):
+    from krux.pages.wallet_settings import WalletSettings
+    from krux.wallet import Wallet
+    from krux.key import Key
+    from krux.pages import BUTTON_ENTER, BUTTON_PAGE, BUTTON_PAGE_PREV
+
+    BTN_SEQUENCE = [
+        BUTTON_PAGE,  # Go to "Policy Type"
+        BUTTON_ENTER,  # Enter "Policy Type"
+        *([BUTTON_PAGE] * 2),  # Change to Miniscript
+        BUTTON_ENTER,  # Confirm Miniscript
+        BUTTON_PAGE,  # Change from Native Segwit to Taproot
+        BUTTON_ENTER,  # Confirm Taproot
+        *([BUTTON_PAGE] * 3),  # Go to "Derivation Path"
+        BUTTON_ENTER,  # Enter "Derivation Path"
+        *([BUTTON_PAGE_PREV] * 3),  # Move to "Del"
+        BUTTON_ENTER,  # Del last "h" from the derivation path
+        *([BUTTON_PAGE] * 2),  # Move to "Go"
+        BUTTON_ENTER,  # Go
+        # Get not hardened warning/pompt
+        BUTTON_ENTER,  # Accept warning
+        BUTTON_PAGE_PREV,  # Go to Back
+        BUTTON_ENTER,  # Leave
+    ]
+
+    ctx = create_ctx(mocker, BTN_SEQUENCE, Wallet(tdata.SINGLESIG_12_WORD_KEY))
+    mnemonic = ctx.wallet.key.mnemonic
+    wallet_settings = WalletSettings(ctx)
+    network, policy_type, script_type, account, derivation_path = (
+        wallet_settings.customize_wallet(ctx.wallet.key)
+    )
+    ctx.wallet = Wallet(
+        Key(
+            mnemonic,
+            policy_type,
+            network,
+            "",  # passphrase
+            account,
+            script_type,
+            derivation_path,
+        )
+    )
+
+    assert ctx.wallet.key.derivation_str() == "m/48h/0h/0h/2"
+    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE)

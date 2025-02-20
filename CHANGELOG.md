@@ -1,3 +1,34 @@
+# Changelog 25.02.0 - February 2025
+
+### Taproot and WSH Miniscript support
+
+- Provides an indented visualization of Miniscript for easier inspection.
+- Includes policy and cosigner verification.
+- Supports custom derivations.
+- Detects unspendable internal keys in Taproot.
+- Contains several UI and settings modifications.
+
+### More Intuitive Tamper Check
+The Tamper Check Flash Hash now appears immediately after the Tamper Check code is created, clarifying its purpose and expected output.
+
+### More Camera Modes
+A zoomed camera mode is available for all cameras, and an anti-glare mode has been added to the GC0328 camera.
+
+### Display Customization Options
+Display orientation on Yahboom and WonderMV devices can now be flipped.
+
+### SD Card PSBT Signing Preserves All Fields
+When signing via SD cards, all fields in a PSBT—including signatures from other keys—are preserved. This facilitates workflows across multiple devices and locations by allowing a single PSBT file to be sequentially signed by different devices.
+
+### Other Bug Fixes and Optimizations
+- Stored mnemonics are now sorted alphabetically.
+- Flash Map drawing errors have been corrected.
+- Address scanning for Blue Wallet has been fixed following its export format change.
+- The use of “h” to indicate hardened derivation path nodes has been standardized.
+- A faster algorithm for double mnemonic calculation has been introduced.
+- PSBT change detection has been made more restrictive.
+
+
 # Changelog 24.11.1 - November 2024
 
 ### Security Fix

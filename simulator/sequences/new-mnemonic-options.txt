@@ -17,6 +17,8 @@ screenshot new-mnemonic-via-snapshot-prompt.png
 press BUTTON_A
 
 qrcode arara.png
+qrcode arara.png
+qrcode arara.png
 
 screenshot new-mnemonic-via-snapshot-capturing.png
 

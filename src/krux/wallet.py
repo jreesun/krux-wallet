@@ -108,12 +108,39 @@ class Wallet:
         if self.descriptor:
             if self.descriptor.is_basic_multisig:
                 return False
-            return self.descriptor.miniscript is not None
+            return (
+                self.descriptor.miniscript is not None
+                or self.descriptor.taptree  #  taptree is "" when not present
+            )
         return False
 
     def is_loaded(self):
         """Returns a boolean indicating whether or not this wallet has been loaded"""
         return self.wallet_data is not None
+
+    def _validate_descriptor(self, descriptor, descriptor_xpubs):
+        """Validates the descriptor against the current key and policy type"""
+
+        if self.is_multisig():
+            if not descriptor.is_basic_multisig:
+                raise ValueError("not multisig")
+            if self.key.xpub() not in descriptor_xpubs:
+                raise ValueError("xpub not a multisig cosigner")
+        elif self.is_miniscript():
+            if self.key.script_type == P2WSH:
+                if descriptor.miniscript is None or descriptor.is_basic_multisig:
+                    raise ValueError("not P2WSH miniscript")
+            elif self.key.script_type == P2TR:
+                if not descriptor.taptree:
+                    raise ValueError("not P2TR miniscript")
+            if self.key.xpub() not in descriptor_xpubs:
+                raise ValueError("xpub not a miniscript cosigner")
+        else:
+            if not descriptor.key:
+                if len(descriptor.keys) > 1:
+                    raise ValueError("not single-sig")
+            if self.key.xpub() != descriptor_xpubs[0]:
+                raise ValueError("xpub does not match")
 
     def load(self, wallet_data, qr_format, allow_assumption=None):
         """Loads the wallet from the given data"""
@@ -128,29 +155,16 @@ class Wallet:
             )
 
         if self.key:
-            if self.is_multisig():
-                if not descriptor.is_basic_multisig:
-                    raise ValueError("not multisig")
-                if self.key.xpub() not in descriptor_xpubs:
-                    raise ValueError("xpub not a multisig cosigner")
-            elif self.is_miniscript():
-                if descriptor.miniscript is None or descriptor.is_basic_multisig:
-                    raise ValueError("not miniscript")
-                if self.key.xpub() not in descriptor_xpubs:
-                    raise ValueError("xpub not a miniscript cosigner")
-            else:
-                if not descriptor.key:
-                    if len(descriptor.keys) > 1:
-                        raise ValueError("not single-sig")
-                if self.key.xpub() != descriptor_xpubs[0]:
-                    raise ValueError("xpub does not match")
+            try:
+                self._validate_descriptor(descriptor, descriptor_xpubs)
+            except ValueError as e:
+                raise ValueError("Invalid Descriptor: %s" % e)
 
         self.wallet_data = wallet_data
         self.wallet_qr_format = qr_format
         self.descriptor = to_unambiguous_descriptor(descriptor)
         self.label = label
-
-        if self.descriptor.key:
+        if self.descriptor.key and not self.descriptor.taptree:
             if not self.label:
                 self.label = t("Single-sig")
             self.policy = {"type": self.descriptor.scriptpubkey_type()}
@@ -168,14 +182,48 @@ class Wallet:
                 "n": n,
                 "cosigners": cosigners,
             }
-        elif self.descriptor.miniscript is not None:
+        elif self.descriptor.miniscript is not None or self.descriptor.taptree:
+            if self.descriptor.taptree:
+                if not descriptor.keys[0].origin:
+                    import hashlib
+                    from embit.ec import NUMS_PUBKEY
+                    from embit.bip32 import HDKey
+
+                    # In case internal key is disabled, check if NUMS is known
+
+                    # Hash all pubkeys, except internal, to compute deterministic chain code
+                    hasher = hashlib.sha256()
+                    for key in descriptor.keys[1:]:
+                        hasher.update(key.sec())
+                    det_chain_code = hasher.digest()
+
+                    # Create provably unspendable deterministic key
+                    version = self.descriptor.keys[0].key.version
+                    provably_unspendable = HDKey(
+                        NUMS_PUBKEY, det_chain_code, version=version
+                    )
+
+                    # Compare expected provably unspendable key with first descriptor key
+                    if (
+                        descriptor.keys[0].key.to_base58()
+                        != provably_unspendable.to_base58()
+                    ):
+                        self.wallet_data = None
+                        raise ValueError("Internal key not provably unspendable")
+
+                taproot_txt = "TR "
+                miniscript_type = P2TR
+            else:
+                taproot_txt = ""
+                miniscript_type = P2WSH
             if not self.label:
-                self.label = t("Miniscript")
+                self.label = taproot_txt + t("Miniscript")
             cosigners = [key.key.to_base58() for key in self.descriptor.keys]
             cosigners = sorted(cosigners)
             self.policy = {
                 "type": self.descriptor.scriptpubkey_type(),
                 "cosigners": cosigners,
+                "miniscript": miniscript_type,
             }
 
     def wallet_qr(self):
@@ -194,6 +242,10 @@ class Wallet:
     def obtain_addresses(self, i=0, limit=None, branch_index=0):
         """Returns an iterator deriving addresses (default branch_index is receive)
         for the wallet up to the provided limit"""
+
+        if self.descriptor is None:
+            raise ValueError("No descriptor to derive addresses from")
+
         starting_index = i
 
         while limit is None or i < starting_index + limit:
@@ -382,17 +434,29 @@ def parse_address(address_data):
     from embit.script import Script, address_to_scriptpubkey
 
     addr = address_data
+    sc = None
     if address_data.lower().startswith("bitcoin:"):
         addr_end = address_data.find("?")
         if addr_end == -1:
             addr_end = len(address_data)
         addr = address_data[8:addr_end]
 
-    try:
-        sc = address_to_scriptpubkey(addr)
-        if not isinstance(sc, Script):
+    if addr == addr.upper():
+        # bip173 suggests bech32 in uppercase for compact QR-Code
+        try:
+            sc = address_to_scriptpubkey(addr.lower())
+            if isinstance(sc, Script):
+                return addr.lower()
+        except:
+            pass
+
+    if not isinstance(sc, Script):
+        try:
+            sc = address_to_scriptpubkey(addr)
+        except:
             raise ValueError("invalid address")
-    except:
+
+    if not isinstance(sc, Script):
         raise ValueError("invalid address")
 
     return addr
@@ -505,12 +569,12 @@ def is_double_mnemonic(mnemonic: str):
 
     words = mnemonic.split(" ")
     if len(words) > 12:
-        from krux.bip39 import mnemonic_is_valid
+        from krux.bip39 import k_mnemonic_is_valid
 
         if (
-            mnemonic_is_valid(" ".join(words[:12]))
-            and mnemonic_is_valid(" ".join(words[12:]))
-            and mnemonic_is_valid(mnemonic)
+            k_mnemonic_is_valid(" ".join(words[:12]))
+            and k_mnemonic_is_valid(" ".join(words[12:]))
+            and k_mnemonic_is_valid(mnemonic)
         ):
             return True
 

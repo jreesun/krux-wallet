@@ -1,6 +1,6 @@
 In Krux, navigate to "Wallet" -> "Wallet Descriptor" and choose to load a descriptor from QR code or SD card.
 
-<img src="../../../img/maixpy_m5stickv/wallet-load-prompt-125.png">
-<img src="../../../img/maixpy_amigo/wallet-load-prompt-150.png">
+<img src="../../../img/maixpy_m5stickv/wallet-load-prompt-250.png" style="width: 13%;">
+<img src="../../../img/maixpy_amigo/wallet-load-prompt-300.png" style="width: 16%;">
 
 After the descriptor is loaded, Krux will present basic information about it:

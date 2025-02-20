@@ -28,6 +28,7 @@ from ..themes import theme
 from ..qr import QRPartParser, FORMAT_UR
 from ..wdt import wdt
 from ..krux_settings import t
+from ..camera import QR_SCAN_MODE, ANTI_GLARE_MODE, ZOOMED_MODE
 
 ANTI_GLARE_WAIT_TIME = 500
 
@@ -54,10 +55,14 @@ class QRCodeCapture(Page):
     def anti_glare_control(self):
         """Controls the anti-glare based on the user input"""
         self.ctx.display.to_portrait()
-        if self.ctx.camera.toggle_antiglare():
-            self.ctx.display.draw_centered_text(t("Anti-glare enabled"))
-        else:
-            self.ctx.display.draw_centered_text(t("Anti-glare disabled"))
+        mode = self.ctx.camera.toggle_camera_mode()
+        if mode == QR_SCAN_MODE:
+            self.ctx.display.draw_centered_text(t("Standard mode"))
+        elif mode == ANTI_GLARE_MODE:
+            self.ctx.display.draw_centered_text(t("Anti-glare mode"))
+        elif mode == ZOOMED_MODE:
+            self.ctx.display.clear()
+            self.ctx.display.draw_centered_text(t("Zoomed mode"))
         time.sleep_ms(ANTI_GLARE_WAIT_TIME)
         # Erase the message from the screen
         self.ctx.display.fill_rectangle(

@@ -9,7 +9,7 @@ def test_one_word_mnemonics():
     for numwords in (12, 15, 18, 21, 24):
         for word in WORDLIST:
             mnemonic = (word + " ") * numwords
-            assert kruxbip39.mnemonic_is_valid(mnemonic) == bip39.mnemonic_is_valid(
+            assert kruxbip39.k_mnemonic_is_valid(mnemonic) == bip39.mnemonic_is_valid(
                 mnemonic
             )
 
@@ -21,11 +21,11 @@ def test_edge_cases():
         ALL_ONE_BYTES = b"\xff" * case
 
         assert (
-            kruxbip39.mnemonic_to_bytes(bip39.mnemonic_from_bytes(ALL_ZERO_BYTES))
+            kruxbip39.k_mnemonic_bytes(bip39.mnemonic_from_bytes(ALL_ZERO_BYTES))
             == ALL_ZERO_BYTES
         )
         assert (
-            kruxbip39.mnemonic_to_bytes(bip39.mnemonic_from_bytes(ALL_ONE_BYTES))
+            kruxbip39.k_mnemonic_bytes(bip39.mnemonic_from_bytes(ALL_ONE_BYTES))
             == ALL_ONE_BYTES
         )
 
@@ -33,10 +33,10 @@ def test_edge_cases():
         while int_val > 0:
             int_val = int_val // 2
             b = int_val.to_bytes(case, "big")
-            assert kruxbip39.mnemonic_to_bytes(bip39.mnemonic_from_bytes(b)) == b
+            assert kruxbip39.k_mnemonic_bytes(bip39.mnemonic_from_bytes(b)) == b
 
             b = (max_val - int_val).to_bytes(case, "big")
-            assert kruxbip39.mnemonic_to_bytes(bip39.mnemonic_from_bytes(b)) == b
+            assert kruxbip39.k_mnemonic_bytes(bip39.mnemonic_from_bytes(b)) == b
 
 
 def test_random_cases():
@@ -44,7 +44,7 @@ def test_random_cases():
         for size in (16, 20, 24, 28, 32):
             token_bytes = secrets.token_bytes(size)
             assert (
-                kruxbip39.mnemonic_to_bytes(bip39.mnemonic_from_bytes(token_bytes))
+                kruxbip39.k_mnemonic_bytes(bip39.mnemonic_from_bytes(token_bytes))
                 == token_bytes
             )
 
@@ -55,7 +55,7 @@ def test_random_cases_custom_wordlist():
         for size in (16, 20, 24, 28, 32):
             token_bytes = secrets.token_bytes(size)
             assert (
-                kruxbip39.mnemonic_to_bytes(
+                kruxbip39.k_mnemonic_bytes(
                     bip39.mnemonic_from_bytes(token_bytes), wordlist=wordlist
                 )
                 == token_bytes
@@ -72,7 +72,7 @@ def test_invalid_words():
     ]
     for case in cases:
         with pytest.raises(ValueError, match=" is not in the dictionary"):
-            kruxbip39.mnemonic_to_bytes(case)
+            kruxbip39.k_mnemonic_bytes(case)
 
 
 def test_invalid_mnemonic_length():
@@ -83,4 +83,4 @@ def test_invalid_mnemonic_length():
     ]
     for case in cases:
         with pytest.raises(ValueError, match="Invalid recovery phrase"):
-            kruxbip39.mnemonic_to_bytes(case)
+            kruxbip39.k_mnemonic_bytes(case)

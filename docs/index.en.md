@@ -4,12 +4,12 @@ hide:
   - toc
 ---
 # Krux
-<img src="img/maixpy_amigo/logo-150.png">
-<img src="img/maixpy_m5stickv/logo-125.png" width="75">
-<img src="img/maixpy_dock/logo-151.png" width="144">
-<img src="img/maixpy_yahboom/logo-156.png" width="116">
-<img src="img/maixpy_cube/logo-200.png" width="120">
-<img src="img/maixpy_wonder_mv/logo-152.png" width="116">
+<img src="img/maixpy_yahboom/logo-312.png" style="width: 11%;">
+<img src="img/maixpy_amigo/logo-300.png" style="width: 16%;">
+<img src="img/maixpy_dock/logo-302.png" style="width: 15%;">
+<img src="img/maixpy_wonder_mv/logo-304.png" style="width: 11%;">
+<img src="img/maixpy_m5stickv/logo-250.png" style="width: 6%;">
+<img src="img/maixpy_cube/logo-400.png" style="width: 10%;">
 
 Krux is an open-source firmware that transforms off-the-shelf Kendryte K210 devices, such as the Maix Amigo, M5StickV and [more](parts.md), into versatile bitcoin transaction signers. Beyond its core functionality, Krux is a flexible platform that can adapt to devices with different form factors, providing a suite of tools to assist with the creation and recovery of mnemonic backups, some of which include encryption options for enhanced security.
 

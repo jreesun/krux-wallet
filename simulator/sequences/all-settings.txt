@@ -5,14 +5,12 @@ press BUTTON_B
 press BUTTON_B
 press BUTTON_A
 
-# Wait message
-wait 2.5
-
 screenshot settings-options.png
 
-# Navigate to Bitcoin
+# Navigate to Default Wallet
 press BUTTON_A
-press BUTTON_B
+
+# Network
 press BUTTON_A
 
 screenshot network-options.png
@@ -21,7 +19,7 @@ screenshot network-options.png
 
 # Return
 press BUTTON_A
-press BUTTON_B
+press BUTTON_C
 press BUTTON_A
 
 # Navigate to Encryption
@@ -52,23 +50,26 @@ press BUTTON_A
 
 screenshot settings-options-hardware.png
 
-# Amigo only - Display
-press_amigo_only BUTTON_A
+# Display
+press BUTTON_B
+press BUTTON_A
 
 screenshot settings-options-hardware-display.png
 
+# Amigo only - Display
 press_amigo_only BUTTON_C
-press_amigo_only BUTTON_A
+press BUTTON_A
+
 
 # Move to printer
-x2 press_amigo_only BUTTON_B
-press_amigo_only BUTTON_A
+press BUTTON_B
+press BUTTON_A
 
 screenshot printer-options.png
 
 # Return to hardware
-press_amigo_only BUTTON_C
-press_amigo_only BUTTON_A
+press BUTTON_C
+press BUTTON_A
 
 # Move to touchscreen
 press_amigo_only BUTTON_B
@@ -81,8 +82,7 @@ x2 press_amigo_only BUTTON_C
 press_amigo_only BUTTON_A
 
 # Return to settings
-press_amigo_only BUTTON_B
-press_m5stickv_only BUTTON_C
+press BUTTON_B
 press BUTTON_A
 
 # Navigate to Language

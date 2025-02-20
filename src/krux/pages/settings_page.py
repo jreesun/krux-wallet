@@ -379,6 +379,10 @@ class SettingsPage(Page):
                 locale_control.load_locale(new_category)
             if setting.attr == "theme":
                 theme.update()
+            # Update screen in case orientation has changed
+            if setting.attr == "flipped_orientation":
+                self.ctx.display.to_landscape()
+                self.ctx.display.to_portrait()
             if setting.attr == "brightness":
                 if board.config["type"] in ["cube", "wonder_mv"]:
                     self.ctx.display.gpio_backlight_ctrl(new_category)

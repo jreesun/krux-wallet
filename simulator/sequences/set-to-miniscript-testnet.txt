@@ -1,0 +1,27 @@
+# Navigate to wallet
+x2 press BUTTON_B
+press BUTTON_A
+
+# Customize
+x2 press BUTTON_B
+x2 press BUTTON_A
+
+# Miniscript Testnet
+press BUTTON_A
+press BUTTON_B
+press BUTTON_A
+press BUTTON_B
+press BUTTON_A
+x2 press BUTTON_B
+press BUTTON_A
+
+# Taproot
+press BUTTON_B
+press BUTTON_A
+
+# Return to initial state
+press BUTTON_C
+press BUTTON_A
+x2 press BUTTON_B
+press BUTTON_A
+x2 press BUTTON_C
