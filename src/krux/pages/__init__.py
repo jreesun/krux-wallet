@@ -33,6 +33,8 @@ from ..input import (
     BUTTON_TOUCH,
     SWIPE_DOWN,
     SWIPE_UP,
+    SWIPE_LEFT,
+    SWIPE_RIGHT,
     ONE_MINUTE,
 )
 from ..display import (
@@ -142,11 +144,15 @@ class Page:
         buffer = starting_buffer
         pad = Keypad(self.ctx, keysets, possible_keys_fn)
         big_title = len(self.ctx.display.to_lines(title)) > 1
+        swipe_has_not_been_used = True
+        swipe_hint = "« swipe »"
+        show_swipe_hint = False
         while True:
             self.ctx.display.clear()
             offset_y = MINIMAL_PADDING if big_title else DEFAULT_PADDING
             if lcd.string_width_px(buffer) < self.ctx.display.width():
-                self.ctx.display.draw_hcentered_text(title, offset_y)
+                text_to_show = title if not show_swipe_hint else swipe_hint
+                self.ctx.display.draw_hcentered_text(text_to_show, offset_y)
                 offset_y += 2 * FONT_HEIGHT if big_title else (FONT_HEIGHT * 3 // 2)
             self.ctx.display.draw_hcentered_text(buffer, offset_y)
             if progress_bar_fn:
@@ -156,6 +162,8 @@ class Page:
             pad.draw_keys()
             pad.draw_keyset_index()
             btn = self.ctx.input.wait_for_button()
+            show_swipe_hint = False  # unless overridden by a particular key,
+            # don't show the swipe hint after a key press
             if btn == BUTTON_TOUCH:
                 btn = pad.touch_to_physical()
             if btn == BUTTON_ENTER:
@@ -173,6 +181,9 @@ class Page:
                 elif pad.cur_key_index == pad.go_index:
                     break
                 elif pad.cur_key_index == pad.more_index:
+                    swipeable = self.ctx.input.touch is not None
+                    if swipeable and swipe_has_not_been_used:
+                        show_swipe_hint = True
                     pad.next_keyset()
                 elif pad.cur_key_index < len(pad.keys):
                     buffer += pad.keys[pad.cur_key_index]
@@ -188,6 +199,8 @@ class Page:
                 if changed and go_on_change:
                     break
             else:
+                if btn in (SWIPE_RIGHT, SWIPE_LEFT):
+                    swipe_has_not_been_used = False
                 pad.navigate(btn)
         if self.ctx.input.touch is not None:
             self.ctx.input.touch.clear_regions()
