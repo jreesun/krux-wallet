@@ -103,7 +103,7 @@ DERIVATION_PATH_SYMBOL = "↳"
 
 
 class Key:
-    """Represents a BIP-39 mnemonic-based private key"""
+    """Represents a BIP39 mnemonic-based private key"""
 
     def __init__(
         self,

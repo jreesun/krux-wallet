@@ -586,10 +586,10 @@ class Login(Page):
             len_mnemonic = choose_len_mnemonic(self.ctx)
             if not len_mnemonic:
                 return MENU_CONTINUE
-            title = t("Enter %d BIP-39 words.") % len_mnemonic
+            title = t("Enter %d BIP39 words.") % len_mnemonic
         else:
             len_mnemonic = None
-            title = t("Enter each word of your BIP-39 mnemonic.")
+            title = t("Enter each word of your BIP39 mnemonic.")
 
         mnemonic_editor = MnemonicEditor(self.ctx)
         mnemonic_editor.compute_search_ranges()
@@ -622,7 +622,7 @@ class Login(Page):
     def load_key_from_octal(self):
         """Handler for the 'load mnemonic'>'via numbers'>'octal' submenu item"""
         title = t(
-            "Enter each word of your BIP-39 mnemonic as a number in octal from 1 to 4000."
+            "Enter each word of your BIP39 mnemonic as a number in octal from 1 to 4000."
         )
 
         def autocomplete(prefix):
@@ -656,7 +656,7 @@ class Login(Page):
     def load_key_from_hexadecimal(self):
         """Handler for the 'load mnemonic'>'via numbers'>'hexadecimal' submenu item"""
         title = t(
-            "Enter each word of your BIP-39 mnemonic as a number in hexadecimal from 1 to 800."
+            "Enter each word of your BIP39 mnemonic as a number in hexadecimal from 1 to 800."
         )
 
         def autocomplete(prefix):
@@ -689,7 +689,7 @@ class Login(Page):
 
     def load_key_from_digits(self):
         """Handler for the 'load mnemonic'>'via numbers'>'decimal' submenu item"""
-        title = t("Enter each word of your BIP-39 mnemonic as a number from 1 to 2048.")
+        title = t("Enter each word of your BIP39 mnemonic as a number from 1 to 2048.")
 
         def autocomplete(prefix):
             if len(prefix) == 4 or (len(prefix) == 3 and int(prefix) > 204):
