@@ -29,7 +29,13 @@ from .. import (
 )
 from ...themes import theme
 from ...krux_settings import t
-from ...display import DEFAULT_PADDING, FONT_HEIGHT, TOTAL_LINES, BOTTOM_PROMPT_LINE
+from ...display import (
+    DEFAULT_PADDING,
+    FONT_HEIGHT,
+    TOTAL_LINES,
+    BOTTOM_PROMPT_LINE,
+    MINIMAL_DISPLAY,
+)
 
 D6_STATES = [str(i + 1) for i in range(6)]
 D20_STATES = [str(i + 1) for i in range(20)]
@@ -130,34 +136,37 @@ class DiceEntropy(Page):
         self.ctx.display.clear()
         self.ctx.display.draw_hcentered_text(t("Rolls distribution:"), FONT_HEIGHT)
         shannon_entropy = self.calculate_entropy()
-        max_count = max(self.roll_counts)
+        max_count = max(self.roll_counts) or 1  # Prevent division by zero
 
-        scale_factor = (self.ctx.display.height() * BAR_GRAPH_SIZE) / 100
-        scale_factor /= max_count
-        bar_graph = []
-        for count in self.roll_counts:
-            bar_graph.append(int(count * scale_factor))
-        bar_pad = self.ctx.display.width() // (self.num_sides + 2)
+        # Calculate scale factor based on display height and BAR_GRAPH_SIZE percentage
+        display_height = self.ctx.display.height()
+        scale = (display_height * BAR_GRAPH_SIZE) / (100 * max_count)
+
+        # Generate bar heights using list comprehension
+        bar_graph = [int(count * scale) for count in self.roll_counts]
+
+        # Calculate horizontal padding and vertical offset for the bar graph
+        display_width = self.ctx.display.width()
+        bar_pad = display_width // (self.num_sides + 2)
         offset_x = bar_pad
-        # Bar graph offset (bottom of the graph)
-        offset_y = BAR_GRAPH_POSITION + BAR_GRAPH_SIZE
-        offset_y *= self.ctx.display.height()
-        offset_y //= 100
+        offset_y = (BAR_GRAPH_POSITION + BAR_GRAPH_SIZE) * display_height // 100
 
-        for individual_bar in bar_graph:
-            bar_offset = offset_y - individual_bar
+        # Draw each bar in the graph
+        for height in bar_graph:
             self.ctx.display.fill_rectangle(
                 offset_x + 1,
-                bar_offset,
+                offset_y - height,
                 bar_pad - 2,
-                individual_bar,
+                height,
                 theme.highlight_color,
             )
             offset_x += bar_pad
-        offset_y += FONT_HEIGHT
+
+        # Draw Shannon's entropy below the graph
+        suffix = " bits" if not MINIMAL_DISPLAY else "b"
         self.ctx.display.draw_hcentered_text(
-            t("Shannon's Entropy:") + " " + str(shannon_entropy) + " " + "bits",
-            offset_y,
+            t("Shannon's entropy:") + " " + str(shannon_entropy) + suffix,
+            offset_y + FONT_HEIGHT,
         )
 
         self.ctx.input.wait_for_button()
@@ -278,7 +287,7 @@ class DiceEntropy(Page):
                         if self.calculate_entropy() < (
                             self.min_entropy - ENTROPY_TOLERANCE
                         ):
-                            warning_txt += t("Poor entropy detected!")
+                            warning_txt += t("Poor entropy!")
                         if self.pattern_detection():
                             if warning_txt:
                                 warning_txt += "\n"

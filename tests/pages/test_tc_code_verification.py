@@ -6,8 +6,8 @@ def test_tc_code_verification(amigo, mocker):
         DIGITS,
         LETTERS,
         UPPERCASE_LETTERS,
+        NUM_SPECIAL_1,
         NUM_SPECIAL_2,
-        NUM_SPECIAL_3,
     )
     from krux.pages.tc_code_verification import TCCodeVerification
 
@@ -71,5 +71,5 @@ def test_tc_code_verification(amigo, mocker):
         keypad_label = "Current Tamper Check Code" if case[3] else "Tamper Check Code"
         tc_verifier.capture_from_keypad.assert_called_once_with(
             keypad_label,
-            [DIGITS, LETTERS, UPPERCASE_LETTERS, NUM_SPECIAL_2, NUM_SPECIAL_3],
+            [NUM_SPECIAL_1, LETTERS, UPPERCASE_LETTERS, NUM_SPECIAL_2],
         )

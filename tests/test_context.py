@@ -42,6 +42,8 @@ def test_clear_clears_printer(mocker, m5stickv):
 
 
 def test_is_logged_in(mocker, m5stickv):
+    from krux.key import TYPE_SINGLESIG
+
     mock_modules(mocker)
     from krux.context import Context
     from krux.wallet import Wallet
@@ -52,5 +54,7 @@ def test_is_logged_in(mocker, m5stickv):
     c.wallet = Wallet(None)
     assert c.is_logged_in() == False
 
-    c.wallet = Wallet(Key(mnemonic="abandon " * 11 + "about", multisig=False))
+    c.wallet = Wallet(
+        Key(mnemonic="abandon " * 11 + "about", policy_type=TYPE_SINGLESIG)
+    )
     assert c.is_logged_in() == True

@@ -23,11 +23,10 @@
 from . import (
     Page,
     ESC_KEY,
-    DIGITS,
     LETTERS,
     UPPERCASE_LETTERS,
+    NUM_SPECIAL_1,
     NUM_SPECIAL_2,
-    NUM_SPECIAL_3,
 )
 from ..krux_settings import t, TC_CODE_PATH, TC_CODE_PBKDF2_ITERATIONS
 
@@ -50,16 +49,16 @@ class TCCodeVerification(Page):
             else t("Tamper Check Code")
         )
         tc_code = self.capture_from_keypad(
-            label, [DIGITS, LETTERS, UPPERCASE_LETTERS, NUM_SPECIAL_2, NUM_SPECIAL_3]
+            label, [NUM_SPECIAL_1, LETTERS, UPPERCASE_LETTERS, NUM_SPECIAL_2]
         )
         if tc_code == ESC_KEY:
             return False
-        # Hashes the integrity code
+        # Hashes the tamper check code
         tc_code_bytes = tc_code.encode()
         # Tamper Check Code hash will be used in "TC Flash Hash"
         tc_code_hash = hashlib.sha256(tc_code_bytes).digest()
 
-        # Read the contents of integrity code file
+        # Read the contents of tamper check code file
         with open(TC_CODE_PATH, "rb") as f:
             file_secret = f.read()
 

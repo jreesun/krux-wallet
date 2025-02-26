@@ -55,6 +55,7 @@ class FlashTools(Page):
     def flash_map(self):
         """Load the flash map page"""
         import flash
+        import image
 
         image_block_size = self.ctx.display.width() // FLASH_ROWS
         if self.ctx.display.width() >= self.ctx.display.height():
@@ -71,7 +72,7 @@ class FlashTools(Page):
         l_y_block_offset = l_y_text_offset + (FONT_HEIGHT - FONT_WIDTH) // 2
         l_x_offset = DEFAULT_PADDING
         self.ctx.display.fill_rectangle(
-            l_x_offset, l_y_block_offset, FONT_WIDTH, FONT_WIDTH, theme.fg_color
+            l_x_offset, l_y_block_offset, FONT_WIDTH, FONT_WIDTH, theme.highlight_color
         )
         l_x_offset += (3 * FONT_WIDTH) // 2
         self.ctx.display.draw_string(
@@ -89,7 +90,7 @@ class FlashTools(Page):
             l_x_offset -= (3 * FONT_WIDTH) // 2
             l_x_offset -= lcd.string_width_px(t("User's Data"))
         self.ctx.display.fill_rectangle(
-            l_x_offset, l_y_block_offset, FONT_WIDTH, FONT_WIDTH, theme.highlight_color
+            l_x_offset, l_y_block_offset, FONT_WIDTH, FONT_WIDTH, theme.fg_color
         )
         l_x_offset += (3 * FONT_WIDTH) // 2
         self.ctx.display.draw_string(
@@ -113,19 +114,25 @@ class FlashTools(Page):
         )
 
         # Draw a map of the flash memory
+        mem_bar = image.Image(size=(FLASH_ROWS * image_block_size, image_block_size))
         for address in range(0, FLASH_SIZE, BLOCK_SIZE):
             wdt.feed()
-            color = theme.fg_color if address < SPIFFS_ADDR else theme.highlight_color
+            color = theme.highlight_color if address < SPIFFS_ADDR else theme.fg_color
             if flash.read(address, BLOCK_SIZE) == empty_buf:
                 color = theme.disabled_color
             # Draw the block
-            x_pos = offset_x + column * image_block_size
-            y_pos = offset_y + row * image_block_size
-            self.ctx.display.fill_rectangle(
-                x_pos, y_pos, image_block_size, image_block_size, color
+            mem_bar.draw_rectangle(
+                column * image_block_size,
+                0,
+                image_block_size,
+                image_block_size,
+                color,
+                fill=True,
             )
             column += 1
-            if column == FLASH_ROWS:
+            if column >= FLASH_ROWS:
+                y_pos = offset_y + row * image_block_size
+                lcd.display(mem_bar, oft=(offset_x, y_pos))
                 column = 0
                 row += 1
         self.ctx.input.reset_ios_state()
@@ -140,14 +147,14 @@ class FlashTools(Page):
             from .tc_code_verification import TCCodeVerification
 
             tc_code_verification = TCCodeVerification(self.ctx)
-            pin_hash = tc_code_verification.capture(return_hash=True)
-            if not pin_hash:
+            tc_code_hash = tc_code_verification.capture(return_hash=True)
+            if not tc_code_hash:
                 return MENU_CONTINUE
         else:
             self.flash_error(t("Set a tamper check code first"))
             return MENU_CONTINUE
 
-        flash_hash = FlashHash(self.ctx, pin_hash)
+        flash_hash = FlashHash(self.ctx, tc_code_hash)
         flash_hash.generate()
 
         return MENU_CONTINUE
@@ -188,10 +195,10 @@ class FlashTools(Page):
 class FlashHash(Page):
     """Generate a human recognizable snapshot of the flash memory tied to a tamper check code"""
 
-    def __init__(self, ctx, pin_hash):
+    def __init__(self, ctx, tc_code_hash):
         super().__init__(ctx, None)
         self.ctx = ctx
-        self.pin_hash = pin_hash
+        self.tc_code_hash = tc_code_hash
         self.image_block_size = self.ctx.display.width() // 7
 
     def hash_pin_with_flash(self, spiffs_region=False):
@@ -209,7 +216,7 @@ class FlashHash(Page):
         if self.ctx.display.width() < self.ctx.display.height():
             percentage_offset += FONT_HEIGHT
         sha256 = hashlib.sha256()
-        sha256.update(self.pin_hash)
+        sha256.update(self.tc_code_hash)
         sha256.update(unique_id())
         for address in range(range_begin, range_end, BLOCK_SIZE):
             counter += 1

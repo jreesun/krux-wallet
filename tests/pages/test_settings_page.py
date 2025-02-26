@@ -28,14 +28,13 @@ def test_settings_m5stickv(m5stickv, mocker, mocker_printer):
                 # Default Wallet
                 BUTTON_ENTER,
                 # Go to Network
-                BUTTON_PAGE,
                 BUTTON_ENTER,
                 # Change network
                 *([BUTTON_PAGE] * 2),  # Cycle through 2 options
                 BUTTON_PAGE_PREV,  # Go back to the second option - testnet
                 BUTTON_ENTER,
                 # Leave Default Wallet
-                *([BUTTON_PAGE] * 2),
+                *([BUTTON_PAGE] * 3),
                 BUTTON_ENTER,
                 # Leave Settings
                 BUTTON_PAGE_PREV,
@@ -150,7 +149,7 @@ def test_settings_m5stickv(m5stickv, mocker, mocker_printer):
         assert case[1]()
 
 
-@pytest.fixture(params=["m5stickv", "cube"])
+@pytest.fixture(params=["m5stickv", "cube", "wonder_mv"])
 def bkl_control_devices(request):
     return request.getfixturevalue(request.param)
 
@@ -159,6 +158,7 @@ def test_change_brightness(bkl_control_devices, mocker):
     from krux.pages.settings_page import SettingsPage
     from krux.input import BUTTON_ENTER, BUTTON_PAGE, BUTTON_PAGE_PREV
     from krux.krux_settings import Settings
+    import board
 
     BTN_SEQUENCE = [
         *([BUTTON_PAGE] * 2),  # Move to "Hardware"
@@ -167,17 +167,40 @@ def test_change_brightness(bkl_control_devices, mocker):
         BUTTON_ENTER,  # Enter "Display"
         BUTTON_PAGE,  # Change "Brightness"
         BUTTON_ENTER,  # Enter "Brightness"
-        *([BUTTON_PAGE] * 2),  # Move to "Back"
+        *([BUTTON_PAGE_PREV] * 2),  # Move to "Back"
         BUTTON_ENTER,  # Confirm "Back"
         *([BUTTON_PAGE_PREV] * 3),  # Move to "Back"
         BUTTON_ENTER,  # Confirm "Back"
     ]
-    ctx = create_ctx(mocker, BTN_SEQUENCE)
+    BTN_SEQUENCE_WONDER_MV = [
+        *([BUTTON_PAGE] * 2),  # Move to "Hardware"
+        BUTTON_ENTER,  # Enter "Hardware"
+        BUTTON_PAGE,  # Move to "Display"
+        BUTTON_ENTER,  # Enter "Display"
+        BUTTON_ENTER,  # Enter "Brightness"
+        BUTTON_PAGE,  # Change "Brightness"
+        BUTTON_ENTER,  # Enter "Brightness"
+        BUTTON_PAGE_PREV,  # Move to "Back"
+        BUTTON_ENTER,  # Confirm "Back"
+        *([BUTTON_PAGE_PREV] * 2),  # Move to "Back"
+        BUTTON_ENTER,  # Confirm "Back"
+        *([BUTTON_PAGE_PREV] * 3),  # Move to "Back"
+        BUTTON_ENTER,  # Confirm "Back"
+    ]
+    if board.config["type"] == "wonder_mv":
+        ctx = create_ctx(mocker, BTN_SEQUENCE_WONDER_MV)
+    else:
+        ctx = create_ctx(mocker, BTN_SEQUENCE)
     settings_page = SettingsPage(ctx)
     previous_brightness = int(Settings().hardware.display.brightness)
     settings_page.settings()
 
-    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE)
+    len_sequence = (
+        len(BTN_SEQUENCE)
+        if board.config["type"] != "wonder_mv"
+        else len(BTN_SEQUENCE_WONDER_MV)
+    )
+    assert ctx.input.wait_for_button.call_count == len_sequence
     assert Settings().hardware.display.brightness == str(previous_brightness + 1)
 
 
@@ -221,7 +244,7 @@ def test_settings_on_amigo_tft(amigo, mocker, mocker_printer):
                 # Enter Wallet
                 0,
                 # Go to Network
-                1,
+                0,
                 # Change network
                 NEXT_INDEX,
                 GO_INDEX,
@@ -411,7 +434,7 @@ def test_restore_settings(amigo, mocker, mocker_sd_card_ok):
 
 def test_set_first_tc_code(amigo, mocker):
     from krux.pages.settings_page import SettingsPage
-    from krux.input import BUTTON_ENTER
+    from krux.input import BUTTON_ENTER, BUTTON_PAGE
     from ..shared_mocks import MockFile, mock_open
 
     TC_CODE_EXTENDED_HASH = b"z\xc0\x99\xac\x01\x1f\xef\x91\xb6\xd5\xbd\xa8\xdc\xfc\x14\xcco-A\x9d\xba\xde\xaf\xe3\xe1{@0t\xb2\x85{"
@@ -420,15 +443,25 @@ def test_set_first_tc_code(amigo, mocker):
         new=mocker.MagicMock(),
     )
     mocker.patch("machine.unique_id", return_value=b"\x01" * 32)
+    mocker.patch("krux.pages.flash_tools.FlashHash", new=mocker.MagicMock())
     mock_file = MockFile()
     mocker.patch("builtins.open", mock_open(mock_file))
-    ctx = create_ctx(mocker, [BUTTON_ENTER])
+    ctx = create_ctx(
+        mocker,
+        [
+            BUTTON_ENTER,
+            BUTTON_ENTER,
+        ],  # Confirm TC Flash Hash at boot
+    )
     ctx.tc_code_enabled = False
     settings_page = SettingsPage(ctx)
     settings_page.capture_from_keypad = mocker.MagicMock(return_value="123456")
     settings_page.enter_modify_tc_code()
     assert ctx.tc_code_enabled == True
-    assert mock_file.write_data == TC_CODE_EXTENDED_HASH
+    assert mock_file.previous_data[-1] == TC_CODE_EXTENDED_HASH
+    assert (
+        mock_file.write_data == '{"settings": {"security": {"boot_flash_hash": true}}}'
+    )
 
 
 def test_set_first_tc_code_not_match(amigo, mocker):
@@ -450,7 +483,7 @@ def test_set_first_tc_code_not_match(amigo, mocker):
 
 def test_set_new_tc_code(amigo, mocker):
     from krux.pages.settings_page import SettingsPage
-    from krux.input import BUTTON_ENTER
+    from krux.input import BUTTON_ENTER, BUTTON_PAGE
     from ..shared_mocks import MockFile, mock_open
 
     TC_CODE_EXTENDED_HASH = b"z\xc0\x99\xac\x01\x1f\xef\x91\xb6\xd5\xbd\xa8\xdc\xfc\x14\xcco-A\x9d\xba\xde\xaf\xe3\xe1{@0t\xb2\x85{"
@@ -461,16 +494,26 @@ def test_set_new_tc_code(amigo, mocker):
     mocker.patch(
         "krux.pages.tc_code_verification.TCCodeVerification.capture", return_value=True
     )
+    mocker.patch("krux.pages.flash_tools.FlashHash", new=mocker.MagicMock())
     mocker.patch("machine.unique_id", return_value=b"\x01" * 32)
     mock_file = MockFile()
     mocker.patch("builtins.open", mock_open(mock_file))
-    ctx = create_ctx(mocker, [BUTTON_ENTER])
+    ctx = create_ctx(
+        mocker,
+        [
+            BUTTON_ENTER,
+            BUTTON_ENTER,
+        ],  # Confirm TC Flash Hash at boot
+    )
     ctx.tc_code_enabled = True
     settings_page = SettingsPage(ctx)
     settings_page.capture_from_keypad = mocker.MagicMock(return_value="123456")
     settings_page.enter_modify_tc_code()
     assert ctx.tc_code_enabled == True
-    assert mock_file.write_data == TC_CODE_EXTENDED_HASH
+    assert mock_file.previous_data[-1] == TC_CODE_EXTENDED_HASH
+    assert (
+        mock_file.write_data == '{"settings": {"security": {"boot_flash_hash": true}}}'
+    )
 
 
 def test_wrong_code_set_new_tc_code(amigo, mocker):

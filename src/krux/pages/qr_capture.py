@@ -22,15 +22,16 @@
 import board
 import time
 from . import Page
-from ..display import FONT_HEIGHT
+from ..display import FONT_HEIGHT, MINIMAL_PADDING
 from ..input import PRESSED
 from ..themes import theme
 from ..qr import QRPartParser, FORMAT_UR
 from ..wdt import wdt
 from ..krux_settings import t
+from ..camera import QR_SCAN_MODE, ANTI_GLARE_MODE, ZOOMED_MODE
 
 ANTI_GLARE_WAIT_TIME = 500
-
+MESSAGE_DISPLAY_PERIOD = 5000
 PROGRESS_BAR_HEIGHT = 15
 
 
@@ -54,10 +55,14 @@ class QRCodeCapture(Page):
     def anti_glare_control(self):
         """Controls the anti-glare based on the user input"""
         self.ctx.display.to_portrait()
-        if self.ctx.camera.toggle_antiglare():
-            self.ctx.display.draw_centered_text(t("Anti-glare enabled"))
-        else:
-            self.ctx.display.draw_centered_text(t("Anti-glare disabled"))
+        mode = self.ctx.camera.toggle_camera_mode()
+        if mode == QR_SCAN_MODE:
+            self.ctx.display.draw_centered_text(t("Standard mode"))
+        elif mode == ANTI_GLARE_MODE:
+            self.ctx.display.draw_centered_text(t("Anti-glare mode"))
+        elif mode == ZOOMED_MODE:
+            self.ctx.display.clear()
+            self.ctx.display.draw_centered_text(t("Zoomed mode"))
         time.sleep_ms(ANTI_GLARE_WAIT_TIME)
         # Erase the message from the screen
         self.ctx.display.fill_rectangle(
@@ -115,7 +120,6 @@ class QRCodeCapture(Page):
 
         self.ctx.display.clear()
         self.ctx.display.draw_centered_text(t("Loading Camera.."))
-        self.ctx.display.to_landscape()
         self.ctx.camera.initialize_run()
 
         parser = QRPartParser()
@@ -126,6 +130,11 @@ class QRCodeCapture(Page):
 
         # Flush events ocurred while loading camera
         self.ctx.input.reset_ios_state()
+        start_time = time.ticks_ms()
+        title_lines = self.ctx.display.draw_hcentered_text(
+            t("Press PAGE to toggle mode"), MINIMAL_PADDING
+        )
+        self.ctx.display.to_landscape()
         while True:
             wdt.feed()
 
@@ -159,7 +168,10 @@ class QRCodeCapture(Page):
                 ur_highlighted = False
 
             img = self.ctx.camera.snapshot()
-            self.ctx.display.render_image(img)
+            if time.ticks_ms() < start_time + MESSAGE_DISPLAY_PERIOD:
+                self.ctx.display.render_image(img, title_lines=title_lines)
+            else:
+                self.ctx.display.render_image(img)
 
             res = img.find_qrcodes()
             if res:

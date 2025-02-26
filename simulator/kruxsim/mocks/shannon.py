@@ -65,6 +65,7 @@ def entropy_img16b(img_bytes):
     # To resemble real devices we do a 24 bits/pixel -> 16 bits/pixel compensation (*2/3)
     return entropy * 2 / 3
 
+
 if "shannon" not in sys.modules:
     sys.modules["shannon"] = mock.MagicMock(
         entropy_img16b=entropy_img16b,

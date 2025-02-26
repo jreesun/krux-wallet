@@ -47,9 +47,10 @@ def test_tools_menu(m5stickv, mocker):
 
 def test_delete_mnemonic_from_flash(m5stickv, mocker):
     from krux.pages.tools import Tools
-    from krux.input import BUTTON_ENTER, BUTTON_PAGE_PREV
+    from krux.input import BUTTON_ENTER, BUTTON_PAGE, BUTTON_PAGE_PREV
 
     BTN_SEQUENCE = [
+        BUTTON_PAGE,  # Move to 2th mnemonic
         BUTTON_ENTER,  # Select first mnemonic
         BUTTON_ENTER,  # Confirm deletion
         BUTTON_ENTER,  # Read remove message
@@ -61,7 +62,7 @@ def test_delete_mnemonic_from_flash(m5stickv, mocker):
     with patch("krux.encryption.open", new=mocker.mock_open(read_data=SEEDS_JSON)) as m:
         tool = Tools(ctx)
         tool.rm_stored_mnemonic()
-    # First mnemonic in the list (ECB) will be deleted
+    # Second mnemonic in the list (ECB) will be deleted
     # Assert only CBC remains
     m().write.assert_called_once_with(CBC_ONLY_JSON)
     assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE)
@@ -110,9 +111,10 @@ def test_delete_mnemonic_from_sd(m5stickv, mocker, mock_file_operations):
     # File reading mock operations will mock 4 mnemonics, 2 from flash, 2 from SD card
 
     BTN_SEQUENCE = [
-        BUTTON_PAGE,  # Move to 3rd mnemonic (first listed from SD card)
+        BUTTON_PAGE,  # Move to 4th mnemonic (second listed from SD card)
         BUTTON_PAGE,
-        BUTTON_ENTER,  # Select first mnemonic
+        BUTTON_PAGE,
+        BUTTON_ENTER,  # Select second mnemonic from SD - ECB
         BUTTON_ENTER,  # Confirm deletion
         BUTTON_ENTER,  # Read remove message
         BUTTON_PAGE_PREV,  # Go to Back
@@ -123,7 +125,7 @@ def test_delete_mnemonic_from_sd(m5stickv, mocker, mock_file_operations):
     with patch("krux.sd_card.open", new=mocker.mock_open(read_data=SEEDS_JSON)) as m:
         tool = Tools(ctx)
         tool.rm_stored_mnemonic()
-    # First mnemonic in the list (ECB) will be deleted
+    # Fourth mnemonic in the list (ECB from SD) will be deleted
     # Assert only CBC remains
     padding_size = len(SEEDS_JSON) - len(CBC_ONLY_JSON)
     m().write.assert_called_once_with(CBC_ONLY_JSON + " " * padding_size)

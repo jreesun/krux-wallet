@@ -22,7 +22,7 @@
 
 [tool.poetry]
 name = "krux"
-version = "24.11.1"
+version = "25.01.beta13"
 description = "Open-source signing device firmware for Bitcoin"
 authors = ["Jeff S <jeffreesun@protonmail.com>"]
 
@@ -103,7 +103,7 @@ docs = "poetry run mkdocs serve"
 # translations tasks
 i18n = "python i18n/i18n.py"
 i18n-bake = "python i18n/i18n.py clean prettify bake"
-format-translations = "black src/krux/translations.py"
+format-translations = "black src/krux/translations/*.py"
 i18n-build = ["i18n-bake", "format-translations", "i18n validate"]
 # aliases
 translations.ref = "i18n-build"
@@ -119,6 +119,7 @@ simulator-wonder-mv = "python simulator/simulator.py --device maixpy_wonder_mv"
 # aliases
 simulator.ref = "simulator-amigo"
 simulator-m5.ref = "simulator-m5stickv"
+simulator-mv.ref = "simulator-wonder-mv"
 
 # git tasks
 git-update = "git submodule update --init --recursive"

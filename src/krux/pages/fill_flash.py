@@ -56,11 +56,11 @@ class FillFlash(Page):
             wdt.feed()
             img = sensor.snapshot()
             entropy_measurement.entropy_measurement_update(img, all_at_once=True)
-            self.ctx.display.render_image(img, compact=True)
+            self.ctx.display.render_image(img, title_lines=1, double_subtitle=True)
             if entropy_measurement.stdev_index > POOR_VARIANCE_TH:
                 self.ctx.display.to_portrait()
                 return img.to_bytes()
-        raise ValueError("Insufficient entropy")
+        raise ValueError(t("Insufficient entropy!"))
 
     def fill_flash_with_camera_entropy(self):
         """Fill the flash memory with entropy data from the camera."""

@@ -31,12 +31,26 @@ except ImportError:
 
 import os
 
+# Settings storage
 SETTINGS_FILENAME = "settings.json"
 SD_PATH = "sd"
 FLASH_PATH = "flash"
 
+# Network settings
 MAIN_TXT = "main"
 TEST_TXT = "test"
+
+# Policy types
+NAME_SINGLE_SIG = "Single-sig"
+NAME_MULTISIG = "Multisig"
+NAME_MINISCRIPT = "Miniscript"
+
+# Policy types names
+POLICY_TYPE_NAMES = [
+    NAME_SINGLE_SIG,
+    NAME_MULTISIG,
+    NAME_MINISCRIPT,
+]
 
 THIN_SPACE = " "
 
@@ -132,39 +146,45 @@ class Store:
 
     def __init__(self):
         self.settings = {}
-        self.file_location = "/" + FLASH_PATH + "/"
+        self.file_location = Store.get_vfs_location(SD_PATH)
         self.dirty = False
 
         # Check for the correct settings persist location
-        try:
-            with open(self.file_location + SETTINGS_FILENAME, "r") as f:
-                self.settings = json.loads(f.read())
-        except:
-            pass
+        # Try to load from SD
+        self._load_settings()
 
+        # Define location based on what was loaded or default undefined
         self.file_location = (
             self.settings.get("settings", {})
             .get("persist", {})
             .get("location", "undefined")
         )
 
-        # Settings file not found on flash, or key is missing
-        if self.file_location != FLASH_PATH:
-            self.file_location = "/" + SD_PATH + "/"
-            try:
-                with open(self.file_location + SETTINGS_FILENAME, "r") as f:
-                    self.settings = json.loads(f.read())
-            except:
-                pass
+        # Settings not found on SD, or 'persist.location' key not defined
+        if SD_PATH not in self.file_location:
+            # Try to load from flash
+            self.file_location = Store.get_vfs_location(FLASH_PATH)
+            self._load_settings()
 
-        # Settings file location points to what is defined in SETTINGS_FILENAME or defaults to flash
-        self.file_location = (
-            "/"
-            + self.settings.get("settings", {})
+        # Settings persist location will point to SD (if defined) else defaults to flash
+        self.file_location = Store.get_vfs_location(
+            self.settings.get("settings", {})
             .get("persist", {})
             .get("location", FLASH_PATH)
-            + "/"
         )
+
+    @classmethod
+    def get_vfs_location(cls, location):
+        """Returns the formatted vfs location for SD/flash"""
+        return "/" + location + "/"
+
+    def _load_settings(self):
+        """Loads settings based on the current file_location (SD/flash)"""
+        try:
+            with open(self.file_location + SETTINGS_FILENAME, "r") as f:
+                self.settings = json.loads(f.read())
+        except:
+            pass
 
     def get(self, namespace, setting_name, default_value):
         """Returns a setting value under the given namespace, or default value if not set"""
@@ -210,17 +230,15 @@ class Store:
                 self.dirty = True
 
     def update_file_location(self, location):
-        """Assumes settings.persist.location will be changed to location:
-        tries to delete current persistent settings file
-        then updates file_location attribute
-        """
-        if "/" + location + "/" != self.file_location:
-            try:
-                if os.stat(self.file_location + SETTINGS_FILENAME):
-                    os.remove(self.file_location + SETTINGS_FILENAME)
-            except:
-                pass
-            self.file_location = "/" + location + "/"
+        """Delete any unused persistent settings when set location"""
+        self.file_location = Store.get_vfs_location(location)
+        try:
+            if FLASH_PATH in self.file_location:
+                os.remove(Store.get_vfs_location(SD_PATH) + SETTINGS_FILENAME)
+            else:
+                os.remove(Store.get_vfs_location(FLASH_PATH) + SETTINGS_FILENAME)
+        except:
+            pass
 
     def save_settings(self):
         """Helper to persist SETTINGS_FILENAME where user selected"""

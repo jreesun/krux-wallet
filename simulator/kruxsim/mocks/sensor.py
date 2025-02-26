@@ -102,7 +102,7 @@ def find_qrcodes(img):
 def snapshot():
     # Temporarily yield execution to allow other threads to run
     time.sleep(THREAD_DROP_PERIOD)
-    
+
     m = mock.MagicMock()
     m.find_qrcodes.return_value = None
     if sequence_executor:
@@ -125,7 +125,7 @@ def snapshot():
     else:
         _, frame = capturer.read()
         rgb_frame = cvtColor(frame, COLOR_BGR2RGB)
-        lab_frame = cvtColor(rgb_frame, COLOR_BGR2LAB)
+        lab_frame = cvtColor(frame, COLOR_BGR2LAB)
         img = Image.fromarray(rgb_frame)
 
         m.get_frame.return_value = rgb_frame
@@ -134,6 +134,7 @@ def snapshot():
         m.get_statistics.return_value = MockStatistics(lab_frame)
         m.width.return_value = frame.shape[1]
         m.height.return_value = frame.shape[0]
+        m.lens_corr.return_value = m
     return m
 
 

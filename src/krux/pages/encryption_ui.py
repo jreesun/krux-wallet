@@ -23,6 +23,7 @@
 from ..display import BOTTOM_PROMPT_LINE
 from ..krux_settings import t, Settings
 from ..encryption import AES_BLOCK_SIZE
+from ..themes import theme
 from . import (
     Page,
     Menu,
@@ -60,20 +61,22 @@ class EncryptionKey(Page):
 
         if key:
             self.ctx.display.clear()
-            continue_string = t("Key") + ": " + key + "\n\n"
-            continue_string += t("Proceed?")
+            self.ctx.display.draw_hcentered_text(t("Key") + ": " + key)
             if self.prompt(
-                continue_string,
-                self.ctx.display.height() // 2,
+                t("Proceed?"),
+                BOTTOM_PROMPT_LINE,
             ):
                 return key
         return None
 
     def load_key(self):
         """Loads and returns a key from keypad"""
-        return self.capture_from_keypad(
+        data = self.capture_from_keypad(
             t("Key"), [LETTERS, UPPERCASE_LETTERS, NUM_SPECIAL_1, NUM_SPECIAL_2]
         )
+        if len(str(data)) > ENCRYPTION_KEY_MAX_LEN:
+            raise ValueError("Maximum length exceeded (%s)" % ENCRYPTION_KEY_MAX_LEN)
+        return data
 
     def load_qr_encryption_key(self):
         """Loads and returns a key from a QR code"""
@@ -83,11 +86,10 @@ class EncryptionKey(Page):
         qr_capture = QRCodeCapture(self.ctx)
         data, _ = qr_capture.qr_capture_loop()
         if data is None:
-            self.flash_error(t("Failed to load key"))
+            self.flash_error(t("Failed to load"))
             return None
         if len(data) > ENCRYPTION_KEY_MAX_LEN:
-            self.flash_error(t("Maximum length exceeded (%s)") % ENCRYPTION_KEY_MAX_LEN)
-            return None
+            raise ValueError("Maximum length exceeded (%s)" % ENCRYPTION_KEY_MAX_LEN)
         return data
 
 
@@ -125,7 +127,7 @@ class EncryptMnemonic(Page):
         key_capture = EncryptionKey(self.ctx)
         key = key_capture.encryption_key()
         if key is None:
-            self.flash_text(error_txt)
+            self.flash_error(t("Key was not provided"))
             return None
 
         version = Settings().encryption.version
@@ -136,14 +138,14 @@ class EncryptMnemonic(Page):
                 t("Additional entropy from camera required for AES-CBC mode")
             )
             if not self.prompt(t("Proceed?"), BOTTOM_PROMPT_LINE):
-                self.flash_text(error_txt)
+                self.flash_error(error_txt)
                 return None
             from .capture_entropy import CameraEntropy
 
             camera_entropy = CameraEntropy(self.ctx)
             entropy = camera_entropy.capture(show_entropy_details=False)
             if entropy is None:
-                self.flash_text(error_txt)
+                self.flash_error(error_txt)
                 return None
             i_vector = entropy[:AES_BLOCK_SIZE]
 
@@ -176,7 +178,7 @@ class EncryptMnemonic(Page):
 
         mnemonic_storage = MnemonicStorage()
         if mnemonic_id in mnemonic_storage.list_mnemonics(sd_card):
-            self.flash_text(
+            self.flash_error(
                 t("ID already exists") + "\n" + t("Encrypted mnemonic was not stored")
             )
             del mnemonic_storage
@@ -192,7 +194,9 @@ class EncryptMnemonic(Page):
             )
         else:
             self.ctx.display.clear()
-            self.ctx.display.draw_centered_text(t("Failed to store mnemonic"))
+            self.ctx.display.draw_centered_text(
+                t("Failed to store mnemonic"), theme.error_color
+            )
         self.ctx.input.wait_for_button()
         del mnemonic_storage
 
@@ -237,7 +241,7 @@ class LoadEncryptedMnemonic(Page):
         sd_mnemonics = mnemonic_storage.list_mnemonics(sd_card=True)
         del mnemonic_storage
 
-        for mnemonic_id in mnemonics:
+        for mnemonic_id in sorted(mnemonics):
             mnemonic_ids_menu.append(
                 (
                     mnemonic_id + "(flash)",
@@ -248,7 +252,7 @@ class LoadEncryptedMnemonic(Page):
                     ),
                 )
             )
-        for mnemonic_id in sd_mnemonics:
+        for mnemonic_id in sorted(sd_mnemonics):
             mnemonic_ids_menu.append(
                 (
                     mnemonic_id + "(SD card)",
@@ -269,6 +273,8 @@ class LoadEncryptedMnemonic(Page):
         """Uses encryption module to load and decrypt a mnemonic"""
         from ..encryption import MnemonicStorage
 
+        error_txt = t("Failed to decrypt")
+
         key_capture = EncryptionKey(self.ctx)
         key = key_capture.encryption_key()
         if key in (None, "", ESC_KEY):
@@ -280,11 +286,11 @@ class LoadEncryptedMnemonic(Page):
         try:
             words = mnemonic_storage.decrypt(key, mnemonic_id, sd_card).split()
         except:
-            self.flash_error(t("Failed to decrypt"))
+            self.flash_error(error_txt)
             return MENU_CONTINUE
 
         if len(words) not in (12, 24):
-            self.flash_error(t("Failed to decrypt"))
+            self.flash_error(error_txt)
             return MENU_CONTINUE
         del mnemonic_storage
         return words

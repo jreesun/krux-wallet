@@ -29,7 +29,7 @@ from . import (
 from ..krux_settings import t
 from ..sd_card import SDHandler
 
-FILE_SPECIAL = "1234567890()-.[]_~"
+FILE_SPECIAL = "1234567890[]-._()~"
 
 
 class SaveFile(Page):

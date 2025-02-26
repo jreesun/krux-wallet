@@ -51,8 +51,8 @@ from . import (
     DIGITS,
     LETTERS,
     UPPERCASE_LETTERS,
+    NUM_SPECIAL_1,
     NUM_SPECIAL_2,
-    NUM_SPECIAL_3,
     MENU_CONTINUE,
     MENU_EXIT,
     ESC_KEY,
@@ -159,14 +159,14 @@ class SettingsPage(Page):
         while len(tamper_check_code) < 6:
             tamper_check_code = self.capture_from_keypad(
                 t("Tamper Check Code"),
-                [DIGITS, LETTERS, UPPERCASE_LETTERS, NUM_SPECIAL_2, NUM_SPECIAL_3],
+                [NUM_SPECIAL_1, LETTERS, UPPERCASE_LETTERS, NUM_SPECIAL_2],
             )
             if tamper_check_code == ESC_KEY:
                 return MENU_CONTINUE
         while len(tc_code_confirm) < 6:
             tc_code_confirm = self.capture_from_keypad(
                 t("Confirm Tamper Check Code"),
-                [DIGITS, LETTERS, UPPERCASE_LETTERS, NUM_SPECIAL_2, NUM_SPECIAL_3],
+                [NUM_SPECIAL_1, LETTERS, UPPERCASE_LETTERS, NUM_SPECIAL_2],
             )
             if tc_code_confirm == ESC_KEY:
                 return MENU_CONTINUE
@@ -192,6 +192,25 @@ class SettingsPage(Page):
 
         flash_filler = FillFlash(self.ctx)
         flash_filler.fill_flash_with_camera_entropy()
+
+        # Asks if the user wants to set TC Flash Hash at boot
+        self.ctx.display.clear()
+        if not Settings().security.boot_flash_hash and self.prompt(
+            t("TC Flash Hash at Boot") + "\n\n" + t("Enable?"),
+            self.ctx.display.height() // 2,
+        ):
+            Settings().security.boot_flash_hash = True
+            store.save_settings()
+
+        # Shows TC Flash Hash
+        from .flash_tools import FlashHash
+
+        tc_code_bytes = tamper_check_code.encode()
+        # Tamper Check Code hash will be used in "TC Flash Hash"
+        tc_code_hash = hashlib.sha256(tc_code_bytes).digest()
+        flash_hash = FlashHash(self.ctx, tc_code_hash)
+        flash_hash.generate()
+
         return MENU_CONTINUE
 
     def _settings_exit_check(self):
@@ -360,6 +379,10 @@ class SettingsPage(Page):
                 locale_control.load_locale(new_category)
             if setting.attr == "theme":
                 theme.update()
+            # Update screen in case orientation has changed
+            if setting.attr == "flipped_orientation":
+                self.ctx.display.to_landscape()
+                self.ctx.display.to_portrait()
             if setting.attr == "brightness":
                 if board.config["type"] in ["cube", "wonder_mv"]:
                     self.ctx.display.gpio_backlight_ctrl(new_category)

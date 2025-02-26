@@ -2,10 +2,10 @@ from ..shared_mocks import mock_context, snapshot_generator, SNAP_SUCCESS, IMAGE
 import hashlib
 
 ENTROPY_MESSAGE_STR = (
-    f"Shannon's Entropy:\n%s bits/px\n(%s total)\n\nPixels deviation index: %s"
+    f"Shannon's entropy:\n%s bits/px\n(%s total)\n\nPixels deviation index: %s"
 )
 
-ENTROPY_INSUFFICIENT_MESSAGE_STR = "Insufficient Entropy!\n\n" + ENTROPY_MESSAGE_STR
+ENTROPY_INSUFFICIENT_MESSAGE_STR = "Insufficient entropy!\n\n" + ENTROPY_MESSAGE_STR
 
 
 def test_cancel_capture(amigo, mocker):
@@ -84,7 +84,7 @@ def test_insufficient_variance(amigo, mocker):
     # Assert that the result is None
     assert result is None
 
-    # Assert ctx.display.draw_centered_text was called with "Insufficient Entropy!"
+    # Assert ctx.display.draw_centered_text was called with "Insufficient entropy!"
     call_message = mocker.call(
         ENTROPY_INSUFFICIENT_MESSAGE_STR % (shannon_value, total_shannon, variance), RED
     )
@@ -136,7 +136,7 @@ def test_insufficient_shannons_entropy(amigo, mocker):
     # Assert that the result is None
     assert result is None
 
-    # Assert ctx.display.draw_centered_text was called with "Insufficient Entropy!"
+    # Assert ctx.display.draw_centered_text was called with "Insufficient entropy!"
     call_message = mocker.call(
         ENTROPY_INSUFFICIENT_MESSAGE_STR % (shannon_value, total_shannon, variance), RED
     )
@@ -193,7 +193,7 @@ def test_poor_variance(amigo, mocker):
 
     assert result == hasher.digest()
 
-    # Assert ctx.display.draw_centered_text was called with "Insufficient Entropy!"
+    # Assert ctx.display.draw_centered_text was called with "Insufficient entropy!"
     call_message = mocker.call(
         ENTROPY_MESSAGE_STR % (shannon_value, total_shannon, variance)
     )
@@ -250,7 +250,7 @@ def test_good_variance_good_shannons_entropy(amigo, mocker):
 
     assert result == hasher.digest()
 
-    # Assert ctx.display.draw_centered_text was called with "Insufficient Entropy!"
+    # Assert ctx.display.draw_centered_text was called with "Insufficient entropy!"
     call_message = mocker.call(
         ENTROPY_MESSAGE_STR % (shannon_value, total_shannon, variance)
     )

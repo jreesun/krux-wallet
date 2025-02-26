@@ -1,7 +1,11 @@
 include _load-12-word-mnemonic.txt
 
 # Navigate to Mnemonic Plain Text QR print promt
-x5 press BUTTON_A
+press BUTTON_A
+press BUTTON_A
+press BUTTON_A
+press BUTTON_A
+press BUTTON_A
 wait 0.1
 
 screenshot print-qr-prompt.png

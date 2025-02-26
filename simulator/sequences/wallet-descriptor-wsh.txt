@@ -28,9 +28,5 @@ wait 0.1
 qrcode specter-desktop-multisig-wallet-p8of8.png
 wait 0.1
 
-screenshot wallet-wsh-load-prompt-fingerprints.png
-
-press BUTTON_A
-
-screenshot wallet-wsh-load-prompt-xpubs.png
+screenshot wallet-wsh-load-prompt.png
 

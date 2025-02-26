@@ -92,15 +92,22 @@ def test_load_key_from_qr_code(m5stickv, mocker):
 
     print("case 2: load_key_from_qr_code")
     # Repeat with too much characters >ENCRYPTION_KEY_MAX_LEN
-    BTN_SEQUENCE = [BUTTON_PAGE] + [  # move to QR code key
-        BUTTON_ENTER
+    BTN_SEQUENCE = [
+        BUTTON_PAGE,  # move to QR code key
+        BUTTON_ENTER,  # read too long text
+        BUTTON_ENTER,  # click to pass error
+        BUTTON_ENTER,  # enter to read normal text
+        BUTTON_PAGE,  # Cancel
     ]  # choose QR code key
     ctx = create_ctx(mocker, BTN_SEQUENCE)
     key_generator = EncryptionKey(ctx)
     too_long_text = "l" * (ENCRYPTION_KEY_MAX_LEN + 1)
-    mocker.patch.object(
-        QRCodeCapture, "qr_capture_loop", new=lambda self: (too_long_text, None)
-    )
+    values_list = ["short text", too_long_text]
+
+    def qr_return(self):
+        return values_list.pop(), None
+
+    mocker.patch.object(QRCodeCapture, "qr_capture_loop", new=qr_return)
     key = key_generator.encryption_key()
     assert key == None
 
@@ -110,7 +117,7 @@ def test_encrypt_cbc_sd_ui(m5stickv, mocker, mock_file_operations):
     from krux.krux_settings import Settings
     from krux.input import BUTTON_ENTER, BUTTON_PAGE
     from krux.pages.encryption_ui import EncryptMnemonic
-    from krux.key import Key
+    from krux.key import Key, TYPE_SINGLESIG
     from embit.networks import NETWORKS
 
     BTN_SEQUENCE = (
@@ -121,7 +128,7 @@ def test_encrypt_cbc_sd_ui(m5stickv, mocker, mock_file_operations):
         + [BUTTON_ENTER]  # Confirm encryption ID
     )
     ctx = create_ctx(mocker, BTN_SEQUENCE)
-    ctx.wallet = Wallet(Key(CBC_WORDS, False, NETWORKS["main"]))
+    ctx.wallet = Wallet(Key(CBC_WORDS, TYPE_SINGLESIG, NETWORKS["main"]))
     storage_ui = EncryptMnemonic(ctx)
     mocker.patch(
         "krux.pages.encryption_ui.EncryptionKey.encryption_key",
@@ -135,7 +142,77 @@ def test_encrypt_cbc_sd_ui(m5stickv, mocker, mock_file_operations):
     storage_ui.encrypt_menu()
 
     ctx.display.draw_centered_text.assert_has_calls(
-        [mocker.call("Encrypted mnemonic was stored with ID: 353175d8")], any_order=True
+        [
+            mocker.call(
+                "Encrypted mnemonic was stored with ID: " + ENCRYPTED_QR_TITLE_CBC
+            )
+        ],
+        any_order=True,
+    )
+    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE)
+
+
+def test_encrypt_save_error_exist(m5stickv, mocker, mock_file_operations):
+    from krux.wallet import Wallet
+    from krux.krux_settings import Settings
+    from krux.input import BUTTON_ENTER, BUTTON_PAGE
+    from krux.pages.encryption_ui import EncryptMnemonic
+    from krux.key import Key
+    from embit.networks import NETWORKS
+
+    BTN_SEQUENCE = [BUTTON_ENTER] + [BUTTON_PAGE]  # Confirm flash store  # Cancel
+    ctx = create_ctx(mocker, BTN_SEQUENCE)
+    ctx.wallet = Wallet(Key(ECB_WORDS, False, NETWORKS["main"]))
+    storage_ui = EncryptMnemonic(ctx)
+    mocker.spy(storage_ui, "flash_error")
+    mocker.patch(
+        "krux.pages.encryption_ui.EncryptionKey.encryption_key",
+        mocker.MagicMock(return_value=TEST_KEY),
+    )
+    mocker.patch(
+        "krux.encryption.MnemonicStorage.list_mnemonics",
+        mocker.MagicMock(return_value=[ENCRYPTED_QR_TITLE_ECB]),
+    )
+    Settings().encryption.version = "AES-ECB"
+    storage_ui.encrypt_menu()
+
+    storage_ui.flash_error.assert_has_calls(
+        [mocker.call("ID already exists" + "\n" + "Encrypted mnemonic was not stored")],
+        any_order=True,
+    )
+    assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE)
+
+
+def test_encrypt_save_error(m5stickv, mocker, mock_file_operations):
+    from krux.wallet import Wallet
+    from krux.krux_settings import Settings
+    from krux.input import BUTTON_ENTER, BUTTON_PAGE
+    from krux.pages.encryption_ui import EncryptMnemonic
+    from krux.key import Key
+    from embit.networks import NETWORKS
+    from krux.themes import theme
+
+    BTN_SEQUENCE = (
+        [BUTTON_ENTER]  # Confirm flash store
+        + [BUTTON_PAGE]  # add custom ID - move to no
+        + [BUTTON_ENTER]  # Confirm encryption ID
+    )
+    ctx = create_ctx(mocker, BTN_SEQUENCE)
+    ctx.wallet = Wallet(Key(ECB_WORDS, False, NETWORKS["main"]))
+    storage_ui = EncryptMnemonic(ctx)
+    mocker.patch(
+        "krux.pages.encryption_ui.EncryptionKey.encryption_key",
+        mocker.MagicMock(return_value=TEST_KEY),
+    )
+    mocker.patch(
+        "krux.encryption.MnemonicStorage.store_encrypted",
+        mocker.MagicMock(return_value=False),
+    )
+    Settings().encryption.version = "AES-ECB"
+    storage_ui.encrypt_menu()
+
+    ctx.display.draw_centered_text.assert_has_calls(
+        [mocker.call("Failed to store mnemonic", theme.error_color)], any_order=True
     )
     assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE)
 
@@ -145,7 +222,7 @@ def test_encrypt_to_qrcode_ecb_ui(m5stickv, mocker):
     from krux.krux_settings import Settings
     from krux.input import BUTTON_ENTER, BUTTON_PAGE
     from krux.pages.encryption_ui import EncryptMnemonic
-    from krux.key import Key
+    from krux.key import Key, TYPE_SINGLESIG
     from embit.networks import NETWORKS
 
     BTN_SEQUENCE = (
@@ -156,7 +233,7 @@ def test_encrypt_to_qrcode_ecb_ui(m5stickv, mocker):
         # QR view is mocked here, no press needed
     )
     ctx = create_ctx(mocker, BTN_SEQUENCE)
-    ctx.wallet = Wallet(Key(ECB_WORDS, False, NETWORKS["main"]))
+    ctx.wallet = Wallet(Key(ECB_WORDS, TYPE_SINGLESIG, NETWORKS["main"]))
     ctx.printer = None
     storage_ui = EncryptMnemonic(ctx)
     mocker.patch(
@@ -181,7 +258,7 @@ def test_encrypt_to_qrcode_cbc_ui(m5stickv, mocker):
     from krux.krux_settings import Settings
     from krux.input import BUTTON_ENTER, BUTTON_PAGE
     from krux.pages.encryption_ui import EncryptMnemonic
-    from krux.key import Key
+    from krux.key import Key, TYPE_SINGLESIG
     from embit.networks import NETWORKS
 
     BTN_SEQUENCE = (
@@ -193,7 +270,7 @@ def test_encrypt_to_qrcode_cbc_ui(m5stickv, mocker):
         # QR view is mocked here, no press needed
     )
     ctx = create_ctx(mocker, BTN_SEQUENCE)
-    ctx.wallet = Wallet(Key(CBC_WORDS, False, NETWORKS["main"]))
+    ctx.wallet = Wallet(Key(CBC_WORDS, TYPE_SINGLESIG, NETWORKS["main"]))
     ctx.printer = None
     storage_ui = EncryptMnemonic(ctx)
     mocker.patch(
@@ -222,7 +299,7 @@ def test_load_encrypted_from_flash(m5stickv, mocker):
     from krux.input import BUTTON_ENTER, BUTTON_PAGE
     from krux.pages.encryption_ui import LoadEncryptedMnemonic
 
-    BTN_SEQUENCE = [BUTTON_ENTER]  # First mnemonic
+    BTN_SEQUENCE = [BUTTON_PAGE, BUTTON_ENTER]  # Second mnemonic
     mocker.patch(
         "krux.pages.encryption_ui.EncryptionKey.encryption_key",
         mocker.MagicMock(return_value=TEST_KEY),
@@ -238,7 +315,7 @@ def test_load_encrypted_from_sd(m5stickv, mocker, mock_file_operations):
     from krux.input import BUTTON_ENTER, BUTTON_PAGE
     from krux.pages.encryption_ui import LoadEncryptedMnemonic
 
-    BTN_SEQUENCE = [BUTTON_ENTER]  # First mnemonic
+    BTN_SEQUENCE = [BUTTON_PAGE, BUTTON_ENTER]  # Second mnemonic
     mocker.patch(
         "krux.pages.encryption_ui.EncryptionKey.encryption_key",
         mocker.MagicMock(return_value=TEST_KEY),

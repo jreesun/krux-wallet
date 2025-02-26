@@ -78,6 +78,13 @@ class Touch:
 
     def valid_position(self, data):
         """Checks if touch position is within buttons area"""
+
+        if (
+            hasattr(Settings().hardware.display, "flipped_orientation")
+            and Settings().hardware.display.flipped_orientation
+        ):
+            data = (self.height - data[0], self.width - data[1])
+
         if self.x_regions and data[0] < self.x_regions[0]:
             return False
         if self.x_regions and data[0] > self.x_regions[-1]:
@@ -149,8 +156,33 @@ class Touch:
 
         return index
 
+    def set_regions(self, x_list=None, y_list=None):
+        """Set buttons map regions x and y"""
+        if x_list:
+            if isinstance(x_list, list):
+                self.x_regions = x_list
+            else:
+                raise ValueError("x_list must be a list")
+        else:
+            self.x_regions = []
+
+        if y_list:
+            if isinstance(y_list, list):
+                self.y_regions = y_list
+            else:
+                raise ValueError("y_list must be a list")
+        else:
+            self.y_regions = []
+
     def _store_points(self, data):
         """Store pressed points and calculare an average pressed point"""
+
+        if (
+            hasattr(Settings().hardware.display, "flipped_orientation")
+            and Settings().hardware.display.flipped_orientation
+        ):
+            data = (self.height - data[0], self.width - data[1])
+
         if self.state == IDLE:
             self.state = PRESSED
             self.press_point = [data]

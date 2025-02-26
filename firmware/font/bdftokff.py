@@ -39,17 +39,17 @@ WIDE24 = "NotoSansCJK-24"
 def open_bdf_save_kff(filename, width, height):
     """Open a bdf font filename and save the corresponding kff file based on the filename"""
 
-    filename_kff = "m5stickv_cube"
+    filename_kff = "tiny"
     if filename == FONT16:
-        filename_kff = "bit_dock_yahboom_wondermv"
+        filename_kff = "small"
     elif filename == FONT24:
-        filename_kff = "amigo"
+        filename_kff = "medium"
     elif filename == WIDE14:
-        filename_kff = "m5stickv_cube_wide"
+        filename_kff = "tiny_wide"
     elif filename == WIDE16:
-        filename_kff = "bit_dock_yahboom_wondermv_wide"
+        filename_kff = "small_wide"
     elif filename == WIDE24:
-        filename_kff = "amigo_wide"
+        filename_kff = "medium_wide"
 
     # Create hexfile based on bdf
     font_hex = "\n".join(bdftohex.bdftohex(filename + ".bdf")) + "\n"
@@ -88,21 +88,22 @@ def save_new_fontc(font_name, overwrite=False):
     on each project, based on the font_name passed otherwise save
     a new font.c file"""
 
-    filename_kff = "m5stickv_cube"
+    filename_kff = "tiny"
     device_name = "m5stickv"
     if font_name == FONT16:
-        filename_kff = "bit_dock_yahboom_wondermv"
+        filename_kff = "small"
         device_name = "dock"
     elif font_name == FONT24:
-        device_name = filename_kff = "amigo"
+        filename_kff = "medium"
+        device_name = "amigo"
     elif font_name == WIDE14:
-        filename_kff = "m5stickv_cube_wide"
+        filename_kff = "tiny_wide"
     elif font_name == WIDE16:
-        filename_kff = "bit_dock_yahboom_wondermv_wide"
+        filename_kff = "small_wide"
         device_name = "dock"
     elif font_name == WIDE24:
+        filename_kff = "medium_wide"
         device_name = "amigo"
-        filename_kff = "amigo_wide"
 
     maixpy_path_start = "../MaixPy/projects/maixpy_"
     maixpy_path_end = (
@@ -133,19 +134,12 @@ def save_new_fontc(font_name, overwrite=False):
         with open(filename, "w", encoding="utf-8", newline="\n") as save_file:
             save_file.write(unicode_str)
 
-        # Also replace for bit, yahboom, and wonder_mv
+        # Also replace for bit, yahboom, wonder_mv, and yahboom_devkit
         if font_name in (FONT16, WIDE16):
-            filename = maixpy_path_start + "bit" + maixpy_path_end
-            with open(filename, "w", encoding="utf-8", newline="\n") as save_file:
-                save_file.write(unicode_str)
-
-            filename = maixpy_path_start + "yahboom" + maixpy_path_end
-            with open(filename, "w", encoding="utf-8", newline="\n") as save_file:
-                save_file.write(unicode_str)
-
-            filename = maixpy_path_start + "wonder_mv" + maixpy_path_end
-            with open(filename, "w", encoding="utf-8", newline="\n") as save_file:
-                save_file.write(unicode_str)
+            for project in ["bit", "yahboom", "wonder_mv", "yahboom_devkit"]:
+                filename = maixpy_path_start + project + maixpy_path_end
+                with open(filename, "w", encoding="utf-8", newline="\n") as save_file:
+                    save_file.write(unicode_str)
 
         # Also replace for Cube
         if font_name in (FONT14, WIDE14):

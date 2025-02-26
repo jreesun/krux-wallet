@@ -1,0 +1,259 @@
+def test_intender(mocker, amigo):
+    from krux.pages.home_pages.miniscript_indenter import MiniScriptIndenter
+
+    cases = [
+        # Sipa's example scripts
+        (
+            "pk(A)",
+            """
+pk(
+ A)
+""",
+        ),
+        (
+            "or_b(pk(A),s:pk(B))",
+            """
+or_b(
+ pk(A),
+ s:pk(B))
+""",
+        ),
+        (
+            "or_d(pk(A),pkh(B))",
+            """
+or_d(
+ pk(A),
+ pkh(B))
+""",
+        ),
+        (
+            "and_v(v:pk(A),or_d(pk(B),older(12960)))",
+            """
+and_v(
+ v:pk(A),
+ or_d(
+  pk(B),
+  older(12960)))
+""",
+        ),
+        (
+            "thresh(3,pk(A),pk(B),pk(C),older(12960))",
+            """
+thresh(
+ 3,
+ pk(A),
+ pk(B),
+ pk(C),
+ older(12960))
+""",
+        ),
+        (
+            "andor(pk(A),older(1008),pk(B))",
+            """
+andor(
+ pk(A),
+ older(1008),
+ pk(B))
+""",
+        ),
+        (
+            "t:or_c(pk(A),and_v(v:pk(B),or_c(pk(C),v:hash160(e7d285b4817f83f724cd29394da75dfc84fe639e))))",
+            """
+t:or_c(
+ pk(A),
+ and_v(
+  v:pk(B),
+  or_c(
+   pk(C),
+   v:hash160(
+    e7d285b4817f83f724cd2
+    9394da75dfc84fe639e))
+    ))
+""",
+            """
+t:or_c(
+ pk(A),
+ and_v(
+  v:pk(B),
+  or_c(
+   pk(C),
+   v:hash160(
+    e7d285b4817f83f724cd293
+    94da75dfc84fe639e))))
+""",
+        ),
+        (
+            "andor(pk(A),or_i(and_v(v:pkh(B),hash160(e7d285b4817f83f724cd29394da75dfc84fe639e)),older(1008)),pk(C))",
+            """
+andor(
+ pk(A),
+ or_i(
+  and_v(
+   v:pkh(B),
+   hash160(
+    e7d285b4817f83f724cd2
+    9394da75dfc84fe639e))
+    ,
+  older(1008)),
+ pk(C))
+""",
+            """
+andor(
+ pk(A),
+ or_i(
+  and_v(
+   v:pkh(B),
+   hash160(
+    e7d285b4817f83f724cd293
+    94da75dfc84fe639e)),
+  older(1008)),
+ pk(C))
+""",
+        ),
+        # # Other examples
+        (
+            "or_d(pk(A),and_v(v:pkh(B),older(6)))",
+            """
+or_d(
+ pk(A),
+ and_v(
+  v:pkh(B),
+  older(6)))
+""",
+        ),
+        (
+            "and_v(or_c(pk(B),or_c(pk(C),v:older(1000))),pk(A))",
+            """
+and_v(
+ or_c(
+  pk(B),
+  or_c(
+   pk(C),
+   v:older(1000))),
+ pk(A))
+""",
+        ),
+        (
+            "or_d(multi(2,A,B),and_v(v:thresh(2,pkh(C),a:pkh(D),a:pkh(E)),older(144)))",
+            """
+or_d(
+ multi(2,A,B),
+ and_v(
+  v:thresh(
+   2,
+   pkh(C),
+   a:pkh(D),
+   a:pkh(E)),
+  older(144)))
+""",
+        ),
+        (
+            "andor(multi(2,A,B,C),or_i(and_v(v:pkh(D),after(230436)),thresh(2,pk(E),s:pk(F),s:pk(G),snl:after(230220))),and_v(v:thresh(2,pkh(H),a:pkh(I),a:pkh(J)),after(230775)))",
+            """
+andor(
+ multi(2,A,B,C),
+ or_i(
+  and_v(
+   v:pkh(D),
+   after(230436)),
+  thresh(
+   2,
+   pk(E),
+   s:pk(F),
+   s:pk(G),
+   snl:after(230220))),
+ and_v(
+  v:thresh(
+   2,
+   pkh(H),
+   a:pkh(I),
+   a:pkh(J)),
+  after(230775)))
+""",
+        ),
+        (
+            "andor(multi(2,A,B,C),or_i(and_v(v:pkh(D),after(1737233087)),thresh(2,pk(E),s:pk(F),s:pk(G),snl:after(1737146691))),and_v(v:thresh(2,pkh(H),a:pkh(I),a:pkh(J)),after(1737319495)))",
+            """
+andor(
+ multi(2,A,B,C),
+ or_i(
+  and_v(
+   v:pkh(D),
+   after(1737233087)),
+  thresh(
+   2,
+   pk(E),
+   s:pk(F),
+   s:pk(G),
+   snl:after(1737146691))
+   ),
+ and_v(
+  v:thresh(
+   2,
+   pkh(H),
+   a:pkh(I),
+   a:pkh(J)),
+  after(1737319495)))
+""",
+            """
+andor(
+ multi(2,A,B,C),
+ or_i(
+  and_v(
+   v:pkh(D),
+   after(1737233087)),
+  thresh(
+   2,
+   pk(E),
+   s:pk(F),
+   s:pk(G),
+   snl:after(1737146691))),
+ and_v(
+  v:thresh(
+   2,
+   pkh(H),
+   a:pkh(I),
+   a:pkh(J)),
+  after(1737319495)))
+""",
+        ),
+        (
+            "tr(A,and_v(v:pk(B),older(65535)))",
+            """
+tr(
+ A,
+ and_v(
+  v:pk(B),
+  older(65535)))
+""",
+        ),
+        (
+            "tr(A,{and_v(v:multi_a(2,B,C,D),older(6)),multi_a(2,F,G)})",
+            """
+tr(
+ A,
+ {and_v(
+  v:multi_a(2,B,C,D),
+  older(6)),
+ multi_a(2,F,G)})
+""",
+        ),
+    ]
+
+    for case in cases:
+        # Case for Amigo
+        indented = MiniScriptIndenter().indent(case[0], max_line_width=25)
+        indented = "\n".join(indented)
+        assert indented == case[1].strip()
+        assert indented.replace("\n", "").replace(" ", "") == case[0]
+
+        # Case for Yahboom/WonderMV
+        indented = MiniScriptIndenter().indent(case[0], max_line_width=27)
+        indented = "\n".join(indented)
+        if len(case) > 2:
+            # Has a special case for Yahboom/WonderMV
+            assert indented == case[2].strip()
+        else:
+            # Results are the same as for Amigo
+            assert indented == case[1].strip()
+        assert indented.replace("\n", "").replace(" ", "") == case[0]

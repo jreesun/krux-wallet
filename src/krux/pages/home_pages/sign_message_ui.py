@@ -344,7 +344,7 @@ class SignMessage(Utils):
         data, qr_format, message_filename = self._load_message()
 
         if data is None:
-            self.flash_error(t("Failed to load message"))
+            self.flash_error(t("Failed to load"))
             return MENU_CONTINUE
 
         if message_filename:

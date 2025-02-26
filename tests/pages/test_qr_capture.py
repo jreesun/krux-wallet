@@ -32,6 +32,8 @@ def test_capture_qr_code(mocker, multiple_devices, tdata):
             tdata.TEST_DATA_BYTES,
         ],
     ]
+    time_mocker = TimeMocker(1000)
+    mocker.patch("time.ticks_ms", time_mocker.tick)
     for case in cases:
         ctx = create_ctx(mocker, None)
         # Mocking the snapshot method to return an animated QR code
@@ -71,14 +73,27 @@ def test_capture_qr_code(mocker, multiple_devices, tdata):
 
 def test_camera_antiglare(mocker, m5stickv):
     from krux.pages.qr_capture import QRCodeCapture
-    from krux.camera import Camera, OV7740_ID, OV2640_ID, GC2145_ID
+    from krux.camera import (
+        OV7740_ID,
+        OV2640_ID,
+        GC2145_ID,
+        GC0328_ID,
+        ANTI_GLARE_MODE,
+        ZOOMED_MODE,
+        QR_SCAN_MODE,
+    )
 
-    antiglare_on = False
+    mode = QR_SCAN_MODE
 
-    def toggle_antiglare():
-        nonlocal antiglare_on
-        antiglare_on = not antiglare_on
-        return antiglare_on
+    def toggle_camera_mode():
+        nonlocal mode
+        if mode == QR_SCAN_MODE:
+            mode = ANTI_GLARE_MODE
+        elif mode == ANTI_GLARE_MODE:
+            mode = ZOOMED_MODE
+        elif mode == ZOOMED_MODE:
+            mode = QR_SCAN_MODE
+        return mode
 
     time_mocker = TimeMocker(1001)
     ctx = mock_context(mocker)
@@ -89,29 +104,29 @@ def test_camera_antiglare(mocker, m5stickv):
     )
     mocker.patch.object(
         ctx.camera,
-        "toggle_antiglare",
-        side_effect=toggle_antiglare,
+        "toggle_camera_mode",
+        side_effect=toggle_camera_mode,
     )
-    cameras = [OV7740_ID, OV2640_ID, GC2145_ID]
+    cameras = [OV7740_ID, OV2640_ID, GC2145_ID, GC0328_ID]
     for cam_id in cameras:
         mocker.patch.object(ctx.camera.sensor, "get_id", lambda: cam_id)
-        PAGE_SEQ = [False, True, False, True, False]
-        PAGE_PREV_SEQ = [False, False, False, False, True]
+        PAGE_SEQ = [False, True, False, True, False, True, False]
+        PAGE_PREV_SEQ = [False, False, False, False, False, False, True]
         mocker.patch("time.ticks_ms", time_mocker.tick)
         ctx.input.page_event = mocker.MagicMock(side_effect=PAGE_SEQ)
         ctx.input.page_prev_event = mocker.MagicMock(side_effect=PAGE_PREV_SEQ)
-        mocker.spy(ctx.camera, "toggle_antiglare")
+        mocker.spy(ctx.camera, "toggle_camera_mode")
         qr_capturer = QRCodeCapture(ctx)
-        qr_code, qr_format = qr_capturer.qr_capture_loop()
+        qr_code, _ = qr_capturer.qr_capture_loop()
         assert qr_code == None
-        ctx.camera.toggle_antiglare.assert_has_calls([mocker.call()] * 2)
+        ctx.camera.toggle_camera_mode.assert_has_calls([mocker.call()] * 2)
+        assert ctx.camera.toggle_camera_mode.call_count == 3
         ctx.light.turn_on.call_count == 0
         ctx.display.draw_centered_text.assert_has_calls(
-            [mocker.call("Anti-glare enabled")]
+            [mocker.call("Anti-glare mode")]
         )
-        ctx.display.draw_centered_text.assert_has_calls(
-            [mocker.call("Anti-glare disabled")]
-        )
+        ctx.display.draw_centered_text.assert_has_calls([mocker.call("Zoomed mode")])
+        ctx.display.draw_centered_text.assert_has_calls([mocker.call("Standard mode")])
 
 
 def test_light_control(mocker, multiple_devices):
@@ -192,6 +207,8 @@ def test_capture_qr_code_loop_skipping(mocker, m5stickv, tdata):
             animated_qr=tdata.TEST_PARTS_FORMAT_PMOFN,
         ),
     )
+    time_mocker = TimeMocker(1000)
+    mocker.patch("time.ticks_ms", time_mocker.tick)
     # Use wdt as loop iteration counter
     spy_wdt = mocker.spy(wdt, "feed")
     qr_capturer = QRCodeCapture(ctx)
@@ -225,6 +242,8 @@ def test_capture_qr_code_loop_duplicated_frames(mocker, m5stickv, tdata):
             animated_qr=tdata.TEST_PARTS_FORMAT_PMOFN,
         ),
     )
+    time_mocker = TimeMocker(1000)
+    mocker.patch("time.ticks_ms", time_mocker.tick)
     # Use wdt as loop iteration counter
     spy_wdt = mocker.spy(wdt, "feed")
     qr_capturer = QRCodeCapture(ctx)

@@ -32,3 +32,30 @@ def test_touch_event(mocker, amigo):
         event = touch.event(validate_position=True)
     assert event == False
     assert touch.current_index() == 3
+
+
+def test_set_regions(mocker, amigo):
+    from krux.touch import Touch
+    import board
+    import pytest
+
+    touch = Touch(
+        board.config["lcd"]["width"],
+        board.config["lcd"]["height"],
+        board.config["krux"]["pins"]["TOUCH_IRQ"],
+    )
+
+    touch.set_regions()
+
+    assert touch.x_regions == touch.y_regions == []
+
+    with pytest.raises(ValueError, match="x_list must be a list"):
+        touch.set_regions(1)
+
+    with pytest.raises(ValueError, match="y_list must be a list"):
+        touch.set_regions(None, 1)
+
+    touch.set_regions([1, 2, 3], [4, 5, 6])
+
+    assert touch.x_regions == [1, 2, 3]
+    assert touch.y_regions == [4, 5, 6]

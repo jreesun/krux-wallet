@@ -12901,6 +12901,48 @@ def test_upgrade(mocker, m5stickv, mock_success_input_cls, tdata):
     )
 
 
+def test_upgrade_fails_write_data(mocker, m5stickv, mock_success_input_cls, tdata):
+    from krux import firmware
+
+    mocker.patch(
+        "builtins.open",
+        new=get_mock_open(
+            {
+                "/sd/firmware-v0.0.0.bin": tdata.TEST_FIRMWARE,
+                "/sd/firmware-v0.0.0.bin.sig": tdata.TEST_FIRMWARE_SIG,
+            }
+        ),
+    )
+    mocker.patch(
+        "os.listdir",
+        new=mocker.MagicMock(
+            return_value=["firmware-v0.0.0.bin", "firmware-v0.0.0.bin.sig"]
+        ),
+    )
+    mocker.patch("krux.firmware.Input", new=mock_success_input_cls)
+    mocker.patch(
+        "krux.firmware.flash.read",
+        new=mocker.MagicMock(
+            return_value=bytes(tdata.SECTOR_WITH_ACTIVE_FIRMWARE_AT_INDEX_1_SLOT_1)
+        ),
+    )
+    mocker.patch(
+        "krux.firmware.ec.PublicKey.from_string",
+        new=mocker.MagicMock(return_value=tdata.TEST_SIGNER_PUBLIC_KEY),
+    )
+
+    mocker.patch.object(firmware, "write_data", side_effect=ValueError)
+    mocker.spy(firmware, "display")
+
+    assert not firmware.upgrade()
+
+    from krux.themes import theme
+
+    firmware.display.flash_text.assert_called_with(
+        "Error read/write data", theme.error_color
+    )
+
+
 def test_upgrade_uses_backup_sector_when_main_sector_is_missing_active_firmware(
     mocker, m5stickv, mock_success_input_cls, tdata
 ):

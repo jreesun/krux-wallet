@@ -23,11 +23,6 @@
 import sys
 from embit.networks import NETWORKS
 from embit.wordlists.bip39 import WORDLIST
-from ..display import DEFAULT_PADDING, FONT_HEIGHT, BOTTOM_PROMPT_LINE
-from ..krux_settings import Settings
-from ..qr import FORMAT_UR
-from ..key import Key, P2WSH, SCRIPT_LONG_NAMES
-from ..krux_settings import t
 from . import (
     Page,
     Menu,
@@ -36,11 +31,32 @@ from . import (
     MENU_EXIT,
     ESC_KEY,
     LETTERS,
+    EXTRA_MNEMONIC_LENGTH_FLAG,
     choose_len_mnemonic,
 )
+from ..display import DEFAULT_PADDING, FONT_HEIGHT, BOTTOM_PROMPT_LINE
+from ..krux_settings import Settings
+from ..qr import FORMAT_UR
+from ..key import (
+    Key,
+    P2WSH,
+    P2TR,
+    SCRIPT_LONG_NAMES,
+    TYPE_SINGLESIG,
+    TYPE_MULTISIG,
+    TYPE_MINISCRIPT,
+    POLICY_TYPE_IDS,
+)
+from ..krux_settings import t
+from ..settings import NAME_SINGLE_SIG, NAME_MULTISIG, NAME_MINISCRIPT
+
 
 DIGITS_HEX = "0123456789ABCDEF"
 DIGITS_OCT = "01234567"
+
+DOUBLE_MNEMONICS_MAX_TRIES = 200
+MASK256 = (1 << 256) - 1
+MASK128 = (1 << 128) - 1
 
 
 class Login(Page):
@@ -181,6 +197,7 @@ class Login(Page):
             if entropy_bytes is not None:
                 import binascii
                 from embit.bip39 import mnemonic_from_bytes
+                from ..bip39 import entropy_checksum
 
                 entropy_hash = binascii.hexlify(entropy_bytes).decode()
                 self.ctx.display.clear()
@@ -189,47 +206,58 @@ class Login(Page):
                 )
                 self.ctx.input.wait_for_button()
 
-                self.ctx.display.clear()
-                self.ctx.display.draw_centered_text(t("Processing.."))
+                # Checks if user wants to create a double mnemonic
+                if len_mnemonic == EXTRA_MNEMONIC_LENGTH_FLAG:
+
+                    # import time  # Debug
+                    # pre_t = time.ticks_ms()  # Debug
+
+                    # split the mnemonic into two parts
+                    first_12_entropy = entropy_bytes[:16]
+                    second_12_entropy = entropy_bytes[16:32]
+
+                    # calculate the checksum for the first 12 words
+                    checksum1 = entropy_checksum(first_12_entropy, 4)
+                    # print first 12 words
+
+                    # replace checksum1 as first 4 bits of second 12 words
+                    snd_12_array = bytearray(second_12_entropy)
+                    snd_12_array[0] = (snd_12_array[0] & 0x0F) | (
+                        (checksum1 & 0x0F) << 4
+                    )
+                    second_12_entropy = bytes(snd_12_array)
+                    # reassemble the 256 bits entropy that has first 12 words with valid checksum
+                    entropy_bytes = first_12_entropy + second_12_entropy
+
+                    # Increment 1 to full 24 words entropy until
+                    # both last 12 words and all 24 have valid checksum
+                    tries = 0
+                    entropy_int = int.from_bytes(entropy_bytes, "big")
+                    while True:
+                        # calculate the checksum for the new 24 words
+                        ck_sum_24 = entropy_checksum(entropy_bytes, 8)
+
+                        # Extract the lower 128 bits from the integer.
+                        snd_12_int = entropy_int & MASK128
+                        # Shift and combine with first 4 bits of the 24 wwords checksum
+                        shifted_entr = ((snd_12_int << 4) & MASK128) | (ck_sum_24 >> 4)
+                        shifted_entropy_bytes = shifted_entr.to_bytes(16, "big")
+                        checksum_l_12 = entropy_checksum(shifted_entropy_bytes, 4)
+                        # check if checksum_l_12 is equal to the last 4 bits of the
+                        # checksum of the full 24 words
+                        if checksum_l_12 == (ck_sum_24 & 0x0F):
+                            break
+
+                        # Increment the integer value and mask to 256 bits.
+                        entropy_int = (entropy_int + 1) & MASK256
+                        entropy_bytes = entropy_int.to_bytes(32, "big")
+                        tries += 1
+                        if tries > DOUBLE_MNEMONICS_MAX_TRIES:
+                            raise ValueError("Failed to find a valid double mnemonic")
+                    # print("Tries: {} / {} ms".format(tries, time.ticks_ms() - pre_t))  # Debug
 
                 num_bytes = 16 if len_mnemonic == 12 else 32
                 entropy_mnemonic = mnemonic_from_bytes(entropy_bytes[:num_bytes])
-
-                # Double mnemonic check
-                if len_mnemonic == 48:
-                    from ..wallet import is_double_mnemonic
-
-                    if not is_double_mnemonic(entropy_mnemonic):
-                        from ..wdt import wdt
-                        import time
-                        from krux.bip39 import mnemonic_is_valid
-
-                        pre_t = time.ticks_ms()
-                        tries = 0
-
-                        # create two 12w mnemonic with the provided entropy
-                        first_12 = mnemonic_from_bytes(entropy_bytes[:16])
-                        second_entropy_mnemonic_int = int.from_bytes(
-                            entropy_bytes[16:32], "big"
-                        )
-                        double_mnemonic = False
-                        while not double_mnemonic:
-                            wdt.feed()
-                            tries += 1
-                            # increment the second mnemonic entropy
-                            second_entropy_mnemonic_int += 1
-                            second_12 = mnemonic_from_bytes(
-                                second_entropy_mnemonic_int.to_bytes(16, "big")
-                            )
-                            entropy_mnemonic = first_12 + " " + second_12
-                            double_mnemonic = mnemonic_is_valid(entropy_mnemonic)
-
-                        print(
-                            "Tries: %d" % tries,
-                            "/ %d" % (time.ticks_ms() - pre_t),
-                            "ms",
-                        )
-
                 return self._load_key_from_words(entropy_mnemonic.split(), new=True)
         return MENU_CONTINUE
 
@@ -255,35 +283,61 @@ class Login(Page):
                 return MENU_CONTINUE
             self.ctx.display.clear()
 
-        from .mnemonic_editor import MnemonicEditor
+        # If the mnemonic is not hidden, show the mnemonic editor
+        if not Settings().security.hide_mnemonic:
+            from .mnemonic_editor import MnemonicEditor
 
-        mnemonic_editor = MnemonicEditor(self.ctx, mnemonic, new)
-        mnemonic = mnemonic_editor.edit()
+            mnemonic = MnemonicEditor(self.ctx, mnemonic, new).edit()
         if mnemonic is None:
             return MENU_CONTINUE
         self.ctx.display.clear()
 
         passphrase = ""
-        multisig = Settings().wallet.multisig
+        if not hasattr(Settings().wallet, "policy_type") and hasattr(
+            Settings().wallet, "multisig"
+        ):
+            # Retro compatibility with old settings - Multisig (false or true)
+            if Settings().wallet.multisig:
+                Settings().wallet.policy_type = TYPE_MULTISIG
+        else:
+            # New settings - Policy type (single-sig, multisig, miniscript)
+            policy_type = POLICY_TYPE_IDS.get(
+                Settings().wallet.policy_type, TYPE_SINGLESIG
+            )
         network = NETWORKS[Settings().wallet.network]
         account = 0
-        if multisig:
-            script_type = P2WSH
-        else:
+        if policy_type == TYPE_SINGLESIG:
             script_type = SCRIPT_LONG_NAMES.get(Settings().wallet.script_type)
+        elif policy_type == TYPE_MINISCRIPT and Settings().wallet.script_type == P2TR:
+            script_type = P2TR
+        else:
+            script_type = P2WSH
+        derivation_path = ""
         from ..wallet import Wallet
 
         while True:
-            key = Key(mnemonic, multisig, network, passphrase, account, script_type)
-
+            key = Key(
+                mnemonic,
+                policy_type,
+                network,
+                passphrase,
+                account,
+                script_type,
+                derivation_path,
+            )
+            if not derivation_path:
+                derivation_path = key.derivation
             wallet_info = key.fingerprint_hex_str(True) + "\n"
             wallet_info += network["name"] + "\n"
-            wallet_info += (
-                t("Single-sig") + "\n" if not multisig else t("Multisig") + "\n"
-            )
-            wallet_info += (
-                self.fit_to_line(key.derivation_str(True), crop_middle=False) + "\n"
-            )
+            if policy_type == TYPE_SINGLESIG:
+                wallet_info += NAME_SINGLE_SIG + "\n"
+            elif policy_type == TYPE_MULTISIG:
+                wallet_info += NAME_MULTISIG + "\n"
+            elif policy_type == TYPE_MINISCRIPT:
+                if script_type == P2TR:
+                    wallet_info += "TR "
+                wallet_info += NAME_MINISCRIPT + "\n"
+            wallet_info += key.derivation_str(True) + "\n"
             wallet_info += (
                 t("No Passphrase") if not passphrase else t("Passphrase") + ": *..*"
             )
@@ -319,7 +373,7 @@ class Login(Page):
                 from .wallet_settings import WalletSettings
 
                 wallet_settings = WalletSettings(self.ctx)
-                network, multisig, script_type, account = (
+                network, policy_type, script_type, account, derivation_path = (
                     wallet_settings.customize_wallet(key)
                 )
 
@@ -382,7 +436,7 @@ class Login(Page):
         qr_capture = QRCodeCapture(self.ctx)
         data, qr_format = qr_capture.qr_capture_loop()
         if data is None:
-            self.flash_error(t("Failed to load mnemonic"))
+            self.flash_error(t("Failed to load"))
             return MENU_CONTINUE
 
         words = []
@@ -578,9 +632,10 @@ class Login(Page):
             return None
 
         def to_word(user_input):
-            word_num = int(user_input, 8)
-            if 0 < word_num <= 2048:
-                return WORDLIST[word_num - 1]
+            if user_input:
+                word_num = int(user_input, 8)
+                if 0 < word_num <= 2048:
+                    return WORDLIST[word_num - 1]
             return ""
 
         def possible_letters(prefix):
@@ -611,9 +666,10 @@ class Login(Page):
             return None
 
         def to_word(user_input):
-            word_num = int(user_input, 16)
-            if 0 < word_num <= 2048:
-                return WORDLIST[word_num - 1]
+            if user_input:
+                word_num = int(user_input, 16)
+                if 0 < word_num <= 2048:
+                    return WORDLIST[word_num - 1]
             return ""
 
         def possible_letters(prefix):
@@ -641,9 +697,10 @@ class Login(Page):
             return None
 
         def to_word(user_input):
-            word_num = int(user_input)
-            if 0 < word_num <= 2048:
-                return WORDLIST[word_num - 1]
+            if user_input:
+                word_num = int(user_input)
+                if 0 < word_num <= 2048:
+                    return WORDLIST[word_num - 1]
             return ""
 
         def possible_letters(prefix):
@@ -706,7 +763,7 @@ class Login(Page):
         words = tiny_scanner.scanner(len_mnemonic == 24)
         del tiny_scanner
         if words is None:
-            self.flash_error(t("Failed to load mnemonic"))
+            self.flash_error(t("Failed to load"))
             return MENU_CONTINUE
         return self._load_key_from_words(words)
 
@@ -739,7 +796,8 @@ class Login(Page):
 
         self.ctx.display.clear()
         self.ctx.display.draw_centered_text(
-            "Krux\n\n"
+            "Krux\n"
+            + "selfcustody.github.io/krux\n\n"
             + t("Hardware")
             + "\n%s\n\n" % board.config["type"]
             + t("Version")

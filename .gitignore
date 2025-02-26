@@ -81,3 +81,6 @@ simulator/sd
 
 # ignore build-release files
 krux-*/ktool*
+
+# IDE files
+.vscode

@@ -116,11 +116,11 @@ class CameraEntropy(Page):
                     )
                 elif entropy_level == POOR_ENTROPY:
                     self.ctx.display.draw_hcentered_text(
-                        t("Poor entropy"), self.y_label_offset, theme.del_color
+                        t("Poor entropy!"), self.y_label_offset, theme.del_color
                     )
                 else:
                     self.ctx.display.draw_hcentered_text(
-                        t("Insufficient entropy"),
+                        t("Insufficient entropy!"),
                         self.y_label_offset,
                         theme.error_color,
                     )
@@ -187,7 +187,7 @@ class CameraEntropy(Page):
         shannon_16b = shannon.entropy_img16b(img_bytes)
         shannon_16b_total = shannon_16b * img_pixels
 
-        entropy_msg = t("Shannon's Entropy:") + "\n"
+        entropy_msg = t("Shannon's entropy:") + "\n"
         entropy_msg += str(round(shannon_16b, 2)) + " " + "bits/px" + "\n"
         entropy_msg += t("(%d total)") % int(shannon_16b_total) + "\n\n"
         entropy_msg += t("Pixels deviation index:") + " "
@@ -198,7 +198,7 @@ class CameraEntropy(Page):
             shannon_16b < INSUFFICIENT_SHANNONS_ENTROPY_TH
             or self.stdev_index < INSUFFICIENT_VARIANCE_TH
         ):
-            error_msg = t("Insufficient Entropy!")
+            error_msg = t("Insufficient entropy!")
             error_msg += "\n\n"
             error_msg += entropy_msg
             self.ctx.display.draw_centered_text(error_msg, theme.error_color)

@@ -30,8 +30,8 @@ def encode(data):
     # PyQRcode also doesn't offer any binary output
 
     def is_qr_alphanumeric(string):
-        return bool(re.match('^[A-Z0-9 $%*+\-./:]+$', string))
-    
+        return bool(re.match("^[A-Z0-9 $%*+\-./:]+$", string))
+
     mode = "binary"
     if isinstance(data, str):
         if data.isnumeric():

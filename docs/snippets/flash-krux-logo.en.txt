@@ -1,7 +1,7 @@
 When the flashing process completes, you should see the Krux logo:
 
-<img src="/krux/img/maixpy_amigo/logo-150.png">
-<img src="/krux/img/maixpy_m5stickv/logo-125.png">
+<img src="/krux/img/maixpy_amigo/logo-300.png" class="amigo">
+<img src="/krux/img/maixpy_m5stickv/logo-250.png" class="m5stickv">
 
 If it doesn't, try turning your device off and on by holding down the power button for six seconds.
 

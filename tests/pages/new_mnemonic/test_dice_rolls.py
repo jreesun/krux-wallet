@@ -379,7 +379,7 @@ def test_low_shannon_entropy_warning(amigo, mocker):
     assert ctx.input.wait_for_button.call_count == len(BTN_SEQUENCE)
 
     # Assert ctx.display.draw_centered_text was called with poor entropy warning"
-    call_message = mocker.call("Poor entropy detected!\nPattern detected!")
+    call_message = mocker.call("Poor entropy!\nPattern detected!")
     ctx.display.draw_centered_text.assert_has_calls([call_message])
 
 

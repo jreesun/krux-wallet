@@ -52,11 +52,21 @@ filesize() {
 
 if [ "$1" == "build" ]; then
     device="$2"
+    if [ "$device" == "--unsupported" ]; then
+        device="$3"
+        allow_unsupported="true"
+    fi
     if [ -z "$device" ]; then
         echo "Missing device"
     else
-        if [ "$device" == "maixpy_m5stickv" ]||[ "$device" == "maixpy_amigo" ]||[ "$device" == "maixpy_bit" ]||
-        [ "$device" == "maixpy_dock" ]||[ "$device" == "maixpy_yahboom" ]||[ "$device" == "maixpy_cube" ]||[ "$device" == "maixpy_wonder_mv" ]; then
+        if [ "$device" == "maixpy_m5stickv" ]||
+        [ "$device" == "maixpy_amigo" ]||
+        [ "$device" == "maixpy_bit" ]||
+        [ "$device" == "maixpy_dock" ]||
+        [ "$device" == "maixpy_yahboom" ]||
+        [ "$device" == "maixpy_cube" ]||
+        [ "$device" == "maixpy_wonder_mv" ]||
+        [ "$allow_unsupported" ]; then
             declare $(grep -m 1 version pyproject.toml | sed 's/ *= */=/g' | sed 's/"//g' | sed 's/\r//g')
             sed -i -- 's/VERSION = ".*"/VERSION = "'"$version"'"/g' src/krux/metadata.py
             
@@ -72,7 +82,7 @@ if [ "$1" == "build" ]; then
             docker cp extract-firmware:$BUILD_DIR/kboot.kfpkg build/kboot.kfpkg
             docker rm extract-firmware
         else
-            echo "Wrong device name, use maixpy_devicename"
+            echo "Wrong or unsupported device name, use maixpy_devicename"
         fi
     fi
 elif [ "$1" == "flash" ]; then
@@ -84,10 +94,14 @@ elif [ "$1" == "flash" ]; then
         if [ "$device" == "maixpy_m5stickv" ]; then
             # https://devicehunt.com/view/type/usb/vendor/0403/device/6001
             device_vendor_product_id="0403:6001"
-        elif [ "$device" == "maixpy_amigo" ]||[ "$device" == "maixpy_bit" ]||[ "$device" == "maixpy_cube" ]; then
+        elif [ "$device" == "maixpy_amigo" ]||
+        [ "$device" == "maixpy_bit" ]||
+        [ "$device" == "maixpy_cube" ]; then
             # https://devicehunt.com/view/type/usb/vendor/0403/device/6010
             device_vendor_product_id="0403:6010"
-        elif [ "$device" == "maixpy_dock" ]||[ "$device" == "maixpy_yahboom" ]||[ "$device" == "maixpy_wonder_mv" ]; then
+        elif [ "$device" == "maixpy_dock" ]||
+        [ "$device" == "maixpy_yahboom" ]||
+        [ "$device" == "maixpy_wonder_mv" ]; then
             # https://devicehunt.com/view/type/usb/vendor/1a86/device/7523
             device_vendor_product_id="1a86:7523"
         fi

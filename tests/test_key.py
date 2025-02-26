@@ -88,14 +88,14 @@ def mock_modules(mocker):
 def test_init(mocker, m5stickv, tdata):
     mock_modules(mocker)
     from embit.networks import NETWORKS
-    from krux.key import Key
+    from krux.key import Key, TYPE_SINGLESIG, TYPE_MULTISIG
 
     cases = [
         (
-            [tdata.TEST_12_WORD_MNEMONIC, False],
+            [tdata.TEST_12_WORD_MNEMONIC, TYPE_SINGLESIG],
             {
                 "mnemonic": tdata.TEST_12_WORD_MNEMONIC,
-                "multisig": False,
+                "policy_type": TYPE_SINGLESIG,
                 "network": NETWORKS["test"],
                 "root key": "tprv8ZgxMBicQKsPfJtsjGcMm6f7ibxmy2LbqbePeCJnhE3tFNKfuWmNHUyMnAfgwQXDSAhfTLGvN4f8zjEFochGbnHiZcrGXnyHDKQaTRK5trx",
                 "derivation": "m/84h/1h/0h",
@@ -103,10 +103,10 @@ def test_init(mocker, m5stickv, tdata):
             },
         ),
         (
-            [tdata.TEST_12_WORD_MNEMONIC, True],
+            [tdata.TEST_12_WORD_MNEMONIC, TYPE_MULTISIG],
             {
                 "mnemonic": tdata.TEST_12_WORD_MNEMONIC,
-                "multisig": True,
+                "policy_type": TYPE_MULTISIG,
                 "network": NETWORKS["test"],
                 "root key": "tprv8ZgxMBicQKsPfJtsjGcMm6f7ibxmy2LbqbePeCJnhE3tFNKfuWmNHUyMnAfgwQXDSAhfTLGvN4f8zjEFochGbnHiZcrGXnyHDKQaTRK5trx",
                 "derivation": "m/48h/1h/0h/2h",
@@ -114,10 +114,10 @@ def test_init(mocker, m5stickv, tdata):
             },
         ),
         (
-            [tdata.TEST_12_WORD_MNEMONIC, False, NETWORKS["main"]],
+            [tdata.TEST_12_WORD_MNEMONIC, TYPE_SINGLESIG, NETWORKS["main"]],
             {
                 "mnemonic": tdata.TEST_12_WORD_MNEMONIC,
-                "multisig": False,
+                "policy_type": TYPE_SINGLESIG,
                 "network": NETWORKS["main"],
                 "root key": "xprv9s21ZrQH143K4VfM4hkrbT38QUYZjWJbW3jGmmtLDFZQTmaav9RcmjburzW2w38u4jAtTEfACi5LXsgWgQMKnj282ydxsSFEJDfA1o1TySf",
                 "derivation": "m/84h/0h/0h",
@@ -125,10 +125,10 @@ def test_init(mocker, m5stickv, tdata):
             },
         ),
         (
-            [tdata.TEST_12_WORD_MNEMONIC, True, NETWORKS["main"]],
+            [tdata.TEST_12_WORD_MNEMONIC, TYPE_MULTISIG, NETWORKS["main"]],
             {
                 "mnemonic": tdata.TEST_12_WORD_MNEMONIC,
-                "multisig": True,
+                "policy_type": TYPE_MULTISIG,
                 "network": NETWORKS["main"],
                 "root key": "xprv9s21ZrQH143K4VfM4hkrbT38QUYZjWJbW3jGmmtLDFZQTmaav9RcmjburzW2w38u4jAtTEfACi5LXsgWgQMKnj282ydxsSFEJDfA1o1TySf",
                 "derivation": "m/48h/0h/0h/2h",
@@ -136,10 +136,10 @@ def test_init(mocker, m5stickv, tdata):
             },
         ),
         (
-            [tdata.TEST_24_WORD_MNEMONIC, False],
+            [tdata.TEST_24_WORD_MNEMONIC, TYPE_SINGLESIG],
             {
                 "mnemonic": tdata.TEST_24_WORD_MNEMONIC,
-                "multisig": False,
+                "policy_type": TYPE_SINGLESIG,
                 "network": NETWORKS["test"],
                 "root key": "tprv8ZgxMBicQKsPe5ghS4VTSeC3XwXJqVcJo4pzkFpuqZzFxhjuMsF13r8avzU8nwnwng6PCZ5EcJuPuqWwvJVCMRj3G9ZZyJ884RcrjAQ52BG",
                 "derivation": "m/84h/1h/0h",
@@ -147,10 +147,10 @@ def test_init(mocker, m5stickv, tdata):
             },
         ),
         (
-            [tdata.TEST_24_WORD_MNEMONIC, True],
+            [tdata.TEST_24_WORD_MNEMONIC, TYPE_MULTISIG],
             {
                 "mnemonic": tdata.TEST_24_WORD_MNEMONIC,
-                "multisig": True,
+                "policy_type": TYPE_MULTISIG,
                 "network": NETWORKS["test"],
                 "root key": "tprv8ZgxMBicQKsPe5ghS4VTSeC3XwXJqVcJo4pzkFpuqZzFxhjuMsF13r8avzU8nwnwng6PCZ5EcJuPuqWwvJVCMRj3G9ZZyJ884RcrjAQ52BG",
                 "derivation": "m/48h/1h/0h/2h",
@@ -158,10 +158,10 @@ def test_init(mocker, m5stickv, tdata):
             },
         ),
         (
-            [tdata.TEST_24_WORD_MNEMONIC, False, NETWORKS["main"]],
+            [tdata.TEST_24_WORD_MNEMONIC, TYPE_SINGLESIG, NETWORKS["main"]],
             {
                 "mnemonic": tdata.TEST_24_WORD_MNEMONIC,
-                "multisig": False,
+                "policy_type": TYPE_SINGLESIG,
                 "network": NETWORKS["main"],
                 "root key": "xprv9s21ZrQH143K3GTAmVdxGza4Dp76byaJTWussqQTMbVnB6zpNVuFY6m91pJUnaQdREZcCTTUSxKbSyyCo69FYNTSjWMGJwQ59KsSHUeNNQd",
                 "derivation": "m/84h/0h/0h",
@@ -169,10 +169,10 @@ def test_init(mocker, m5stickv, tdata):
             },
         ),
         (
-            [tdata.TEST_24_WORD_MNEMONIC, True, NETWORKS["main"]],
+            [tdata.TEST_24_WORD_MNEMONIC, TYPE_MULTISIG, NETWORKS["main"]],
             {
                 "mnemonic": tdata.TEST_24_WORD_MNEMONIC,
-                "multisig": True,
+                "policy_type": TYPE_MULTISIG,
                 "network": NETWORKS["main"],
                 "root key": "xprv9s21ZrQH143K3GTAmVdxGza4Dp76byaJTWussqQTMbVnB6zpNVuFY6m91pJUnaQdREZcCTTUSxKbSyyCo69FYNTSjWMGJwQ59KsSHUeNNQd",
                 "derivation": "m/48h/0h/0h/2h",
@@ -186,7 +186,7 @@ def test_init(mocker, m5stickv, tdata):
 
         assert isinstance(key, Key)
         assert key.mnemonic == case[1]["mnemonic"]
-        assert key.multisig == case[1]["multisig"]
+        assert key.policy_type == case[1]["policy_type"]
         assert key.network == case[1]["network"]
         assert key.root.to_base58() == case[1]["root key"]
         assert key.derivation == case[1]["derivation"]
@@ -195,9 +195,9 @@ def test_init(mocker, m5stickv, tdata):
 
 def test_xpub(mocker, m5stickv, tdata):
     mock_modules(mocker)
-    from krux.key import Key
+    from krux.key import Key, TYPE_SINGLESIG
 
-    key = Key(tdata.TEST_MNEMONIC, False)
+    key = Key(tdata.TEST_MNEMONIC, TYPE_SINGLESIG)
     mocker.spy(key.account, "to_base58")
 
     assert key.xpub() == tdata.TEST_XPUB
@@ -207,9 +207,9 @@ def test_xpub(mocker, m5stickv, tdata):
 def test_key_expression(mocker, m5stickv, tdata):
     mock_modules(mocker)
     import krux
-    from krux.key import Key
+    from krux.key import Key, TYPE_SINGLESIG
 
-    key = Key(tdata.TEST_MNEMONIC, False)
+    key = Key(tdata.TEST_MNEMONIC, TYPE_SINGLESIG)
     mocker.spy(key.account, "to_base58")
 
     cases = [
@@ -227,9 +227,9 @@ def test_key_expression(mocker, m5stickv, tdata):
 def test_sign(mocker, m5stickv, tdata):
     mock_modules(mocker)
     from embit import ec
-    from krux.key import Key
+    from krux.key import Key, TYPE_SINGLESIG
 
-    key = Key(tdata.TEST_MNEMONIC, False)
+    key = Key(tdata.TEST_MNEMONIC, TYPE_SINGLESIG)
 
     signature = key.sign(tdata.TEST_HASH)
     assert isinstance(signature, ec.Signature)
@@ -238,9 +238,9 @@ def test_sign(mocker, m5stickv, tdata):
 
 def test_sign_fails_with_invalid_hash(mocker, m5stickv, tdata):
     mock_modules(mocker)
-    from krux.key import Key
+    from krux.key import Key, TYPE_SINGLESIG
 
-    key = Key(tdata.TEST_MNEMONIC, False)
+    key = Key(tdata.TEST_MNEMONIC, TYPE_SINGLESIG)
 
     with pytest.raises(ValueError):
         key.sign(tdata.TEST_INVALID_HASH)

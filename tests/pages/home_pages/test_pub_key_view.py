@@ -7,6 +7,7 @@ def test_public_key(mocker, m5stickv, tdata):
     from krux.wallet import Wallet
     from krux.input import BUTTON_ENTER, BUTTON_PAGE, BUTTON_PAGE_PREV
     from krux.qr import FORMAT_NONE
+    from krux.key import TYPE_MULTISIG
 
     cases = [
         # Case parameters: [Wallet, Printer, Button Sequence, Show XPUB, Show ZPUB]
@@ -77,7 +78,7 @@ def test_public_key(mocker, m5stickv, tdata):
 
         pub_key_viewer.public_key()
 
-        version = "Zpub" if ctx.wallet.key.multisig else "zpub"
+        version = "Zpub" if ctx.wallet.key.policy_type == TYPE_MULTISIG else "zpub"
         qr_view_calls = []
         print_qr_calls = []
 

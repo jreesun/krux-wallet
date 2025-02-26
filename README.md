@@ -8,12 +8,12 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/selfcustody/krux/blob/main/LICENSE.md)
 
 <p align="center">
-<img src="docs/img/maixpy_amigo/logo-150.en.png" alt="maixpy amigo device">
-<img src="docs/img/maixpy_m5stickv/logo-125.en.png" alt="m5stickv device" width="75">
-<img src="docs/img/maixpy_dock/logo-151.en.png" alt="maixpy dock device" width="144">
-<img src="docs/img/maixpy_yahboom/logo-156.en.png" alt="yahboom device" width="116">
-<img src="docs/img/maixpy_cube/logo-200.en.png" alt="maixpy cube device" width="120">
-<img src="docs/img/maixpy_wonder_mv/logo-152.en.png" alt="wonder mv device" width="116">
+<img src="docs/img/maixpy_yahboom/logo-312.png" alt="yahboom" style="width: 11%;">
+<img src="docs/img/maixpy_amigo/logo-300.png"  alt="maixpy amigo" style="width: 16%;">
+<img src="docs/img/maixpy_dock/logo-302.png" alt="maixpy dock" style="width: 15%;">
+<img src="docs/img/maixpy_wonder_mv/logo-304.png" alt="wonder mv" style="width: 11%;">
+<img src="docs/img/maixpy_m5stickv/logo-250.png" alt="m5stickv" style="width: 6%;">
+<img src="docs/img/maixpy_cube/logo-400.png" alt="maixpy cube" style="width: 10%;">
 </p>
 
 Krux is an open-source firmware facilitating the creation of Bitcoin signing devices from readily available components, such as Kendryte K210 devices. It transforms these devices into airgapped tools capable of handling transactions for both single and multisignature wallets, supporting offline signing via QR code or SD card, thus empowering users to securely self-custody their Bitcoin.
@@ -226,51 +226,15 @@ To leave `screen` serial monitor press `Ctrl+a`, followed by `k`, then confirm w
 Use [MaixPy IDE](https://dl.sipeed.com/shareURL/MAIX/MaixPy/ide/v0.2.5) to debug the devices. Click on `Tools > Open Terminal > New Terminal > Connect to serial port > Select a COM port available` (if didn't work, try another COM port). We have removed some support for MaixPy IDE (due to size constraints), but the debug works.
 
 ## WDT watchdog
-Krux makes use of MaixPy's [WDT watchdog module](https://wiki.sipeed.com/soft/maixpy/en/api_reference/machine/wdt.html), you can see it [here](src/krux/wdt.py). This will reset the device if not fed for some time. To stop the watchdog, when connected through the terminal, run the following:
+Krux makes use of MaixPy's [WDT watchdog module](https://wiki.sipeed.com/soft/maixpy/en/api_reference/machine/wdt.html), you can see it [here](src/krux/wdt.py). This will reset the device if not fed for some time. To stop the watchdog, when connected through the terminal, run the following (starting from v24.07.0 this is no loger possible because the Python real-time compiler and REPL were disabled):
 ```python
 # Run this everytime you want to stop the watchdog
 
 from krux.wdt import wdt
 wdt.stop()
-
-# OR create this config to disable the watchdog, save the settings file and reset the device (in order to make krux read the new file!)
-
-import json, machine
-
-CONF_FILENAME="/flash/settings.json"
-CONF_NAME="WATCHDOG_DISABLE"
-
-conf_dict = {}
-try:
-  with open(CONF_FILENAME, "rb") as f:
-    conf_dict = json.loads(f.read())
-except:
-    pass
-
-conf_dict[CONF_NAME] = 1
-
-with open(CONF_FILENAME, "w") as f:
-    f.write(json.dumps(conf_dict))
-    
-machine.reset()
 ```
 
 Now, with watchdog disabled, you can use debug the device normally. Also remember to disable the `Settings > Security > Shutdown Time` setting it to `0` to no more automatic resets, and if you added any print statements to the code, they should appear whenever your code is reached.
-
-```bash
-Traceback (most recent call last):
-  File "_boot.py", line 109, in <module>
-  File "_boot.py", line 64, in login
-  File "krux/pages/__init__.py", line 498, in run
-  File "krux/pages/__init__.py", line 614, in run_loop
-  File "krux/input.py", line 325, in wait_for_button
-  File "krux/input.py", line 238, in _wait_for_press
-KeyboardInterrupt: 
-MicroPython v1.11 on 2024-03-11; Sipeed_M1 with kendryte-k210
-Type "help()" for more information.
->>> 
->>> 
-```
 
 ## Create new translations - i18n
 The project has lots of translations [here](i18n/translations), if you add new english messages in code using `t()` function, you will need to:

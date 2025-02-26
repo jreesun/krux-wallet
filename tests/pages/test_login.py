@@ -234,12 +234,14 @@ def test_new_double_mnemonic_from_snapshot(m5stickv, mocker):
     from krux.pages.login import Login
     from krux.input import BUTTON_ENTER, BUTTON_PAGE
     from krux.wallet import is_double_mnemonic
-    from krux.display import DEFAULT_PADDING
-    from krux.themes import WHITE, BLACK
+    from embit.bip39 import mnemonic_from_bytes
+
+    ORIGINAL_ENTROPY = b"\x01" * 32
 
     # mocks a result of a hashed image
     mocker.patch(
-        "krux.pages.capture_entropy.CameraEntropy.capture", return_value=b"\x01" * 32
+        "krux.pages.capture_entropy.CameraEntropy.capture",
+        return_value=ORIGINAL_ENTROPY,
     )
 
     BTN_SEQUENCE = (
@@ -258,7 +260,7 @@ def test_new_double_mnemonic_from_snapshot(m5stickv, mocker):
         # Load Wallet
         [BUTTON_ENTER]
     )
-    MNEMONIC = "absurd amount doctor acoustic avoid letter advice cage absurd amount doctor adjust absurd amount doctor acoustic avoid letter advice cage absurd amount doll fancy"
+    MNEMONIC = "absurd amount doctor acoustic avoid letter advice cage absurd amount doctor adjust avoid letter advice cage absurd amount doctor acoustic avoid letter affair embark"
     ctx = create_ctx(mocker, BTN_SEQUENCE)
     login = Login(ctx)
     login.new_key_from_snapshot()
@@ -269,6 +271,15 @@ def test_new_double_mnemonic_from_snapshot(m5stickv, mocker):
     ctx.display.draw_hcentered_text.assert_has_calls(
         [mocker.call("BIP39 Mnemonic*", 5)]
     )
+    original_mnemonic_words = mnemonic_from_bytes(ORIGINAL_ENTROPY).split(" ")
+    converted_mnemonic_words = ctx.wallet.key.mnemonic.split(" ")
+
+    # Assert only words of indexes 11, 22 and 23 are different
+    assert original_mnemonic_words[:11] == converted_mnemonic_words[:11]
+    assert original_mnemonic_words[11] != converted_mnemonic_words[11]
+    assert original_mnemonic_words[12:22] == converted_mnemonic_words[12:22]
+    assert original_mnemonic_words[22] != converted_mnemonic_words[22]
+    assert original_mnemonic_words[23] != converted_mnemonic_words[23]
 
 
 ########## load words from qrcode tests
@@ -717,11 +728,13 @@ def test_create_key_from_text(m5stickv, mocker):
 
 def test_load_key_from_digits(m5stickv, mocker, mocker_printer):
     from krux.pages.login import Login
-    from krux.input import BUTTON_ENTER, BUTTON_PAGE
+    from krux.input import BUTTON_ENTER, BUTTON_PAGE, BUTTON_PAGE_PREV
 
     cases = [
         (
             [BUTTON_ENTER]  # 1 press confirm msg
+            + [BUTTON_PAGE_PREV]  # place on btn Go
+            + [BUTTON_ENTER]  # press Go without any value should not present any error
             + (
                 # 1 press change to number "2" and 1 press to select
                 [BUTTON_PAGE, BUTTON_ENTER]
@@ -815,6 +828,8 @@ def test_load_12w_from_hexadecimal(m5stickv, mocker, mocker_printer):
 
     BTN_SEQUENCE = (
         [BUTTON_ENTER]  # 1 press confirm msg
+        + [BUTTON_PAGE_PREV]  # place on btn Go
+        + [BUTTON_ENTER]  # press Go without any value should not present any error
         + (
             # 4 press change to number "F"
             [BUTTON_PAGE_PREV, BUTTON_PAGE_PREV, BUTTON_PAGE_PREV, BUTTON_PAGE_PREV]
@@ -919,6 +934,8 @@ def test_load_12w_from_octal(m5stickv, mocker, mocker_printer):
 
     BTN_SEQUENCE = (
         [BUTTON_ENTER]  # 1 press confirm msg
+        + [BUTTON_PAGE_PREV]  # place on btn Go
+        + [BUTTON_ENTER]  # press Go without any value should not present any error
         + (
             # 4 press change to number "7"
             [BUTTON_PAGE_PREV] * 4
@@ -1286,7 +1303,10 @@ def test_about(mocker, m5stickv):
 
     ctx.input.wait_for_button.assert_called_once()
     ctx.display.draw_centered_text.assert_called_with(
-        "Krux\n\nHardware\n" + board.config["type"] + "\n\nVersion\n" + VERSION
+        "Krux\nselfcustody.github.io/krux\n\nHardware\n"
+        + board.config["type"]
+        + "\n\nVersion\n"
+        + VERSION
     )
 
 

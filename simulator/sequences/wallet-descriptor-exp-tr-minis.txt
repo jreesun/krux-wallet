@@ -1,0 +1,23 @@
+include _load-12-word-mnemonic.txt
+
+include set-to-miniscript-testnet.txt
+
+# Navigate to Wallet Descriptor
+x2 press BUTTON_B
+x2 press BUTTON_A
+
+#Load from QR code
+x2 press BUTTON_A
+
+qrcode liana-expanding-tr-descriptor.png
+wait 0.1
+
+screenshot wallet-descriptor-tr-minis-1.png
+
+press BUTTON_A
+
+screenshot wallet-descriptor-tr-minis-2.png
+
+press BUTTON_A
+
+screenshot wallet-descriptor-tr-minis-3.png

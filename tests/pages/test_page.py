@@ -155,3 +155,132 @@ def test_display_qr_code_loop_through_brightness(mocker, m5stickv, mock_page_cls
         mocker.call(0, TEST_QR_DATA_IMAGE, light_color=DARKGREY),  # Darker
         mocker.call(0, TEST_QR_DATA_IMAGE),  # Default
     ]
+
+
+def get_frame_titles_resulting_from_input(
+    mocker, mock_page_cls, title, input_seq, use_buttons=False, has_touch=True
+):
+    from krux.input import BUTTON_TOUCH, SWIPE_RIGHT, BUTTON_PAGE, BUTTON_ENTER
+    from krux.pages.keypads import Keypad
+
+    def get_button_seq(key_index):
+        return [*([BUTTON_PAGE] * (key_index - 1))] + [BUTTON_ENTER]
+
+    keysets = ["123", "456"]  # both should be the same length
+    pad = Keypad(create_ctx(mocker, None), keysets, None)
+
+    button_seq = []
+    touch_seq = [] if has_touch else None
+    input_seq.append("go key")  # to exit capture_from_keypad
+
+    if has_touch and not use_buttons:
+        for i in input_seq:
+            if i == "more key":
+                button_seq.append(BUTTON_TOUCH)
+                touch_seq.append(pad.more_index)
+            elif i == "go key":
+                button_seq.append(BUTTON_TOUCH)
+                touch_seq.append(pad.go_index)
+            elif i == "normal key":
+                button_seq.append(BUTTON_TOUCH)
+                touch_seq.append(1)
+            elif i == "swipe":
+                button_seq.append(SWIPE_RIGHT)
+    else:
+        for i in input_seq:
+            if i == "more key":
+                button_seq = button_seq + get_button_seq(pad.more_index)
+            elif i == "go key":
+                button_seq = button_seq + get_button_seq(pad.go_index)
+            elif i == "normal key":
+                button_seq = button_seq + get_button_seq(1)
+
+    ctx = create_ctx(mocker, button_seq, None, None, touch_seq)
+    if not has_touch:
+        ctx.input.touch = None
+    page = mock_page_cls(ctx)
+    captured = page.capture_from_keypad(title, keysets)
+    frame_titles = [
+        t[0][0] for t in ctx.display.draw_hcentered_text.call_args_list if t[0][1] == 10
+    ]
+    return frame_titles
+
+
+def test_keypad_esc_no_exit(mocker, amigo):
+    from krux.pages import Page, LETTERS
+    from krux.input import BUTTON_ENTER, BUTTON_PAGE_PREV
+
+    btn_seq = (
+        [BUTTON_PAGE_PREV] * 2  # go to ESC
+        + [BUTTON_ENTER]  # press ESC to exit
+        + [BUTTON_PAGE_PREV, BUTTON_ENTER]  # No
+        + [BUTTON_ENTER]  # press ESC to exit
+        + [BUTTON_ENTER]  # Yes
+    )
+
+    ctx = create_ctx(mocker, btn_seq)
+    assert ctx.input.touch is not None
+
+    page = Page(ctx)
+    page.capture_from_keypad("test", [LETTERS])
+
+    assert ctx.input.touch.set_regions.call_count == 4
+
+
+def test_keypad_swipe_hint_is_shown_after_more_keypress_and_cleared_after_other_keypress(
+    mocker, amigo, mock_page_cls
+):
+    frame_titles = get_frame_titles_resulting_from_input(
+        mocker,
+        mock_page_cls,
+        "title",
+        ["more key", "normal key", "normal key", "more key"],
+    )
+    assert frame_titles[0] == "title"  # initial
+    assert frame_titles[1] == "« swipe »"  # after more key
+    assert frame_titles[2] == "title"  # after normal key
+    assert frame_titles[3] == "title"  # after normal key
+    assert frame_titles[4] == "« swipe »"  # after more key
+
+
+def test_keypad_swipe_hint_is_not_shown_once_user_has_swiped(
+    mocker, amigo, mock_page_cls
+):
+    frame_titles = get_frame_titles_resulting_from_input(
+        mocker,
+        mock_page_cls,
+        "title",
+        ["normal key", "more key", "normal key", "swipe", "more key"],
+    )
+    assert frame_titles[0] == "title"  # initial
+    assert frame_titles[1] == "title"  # after normal key
+    assert frame_titles[2] == "« swipe »"  # after more key
+    assert frame_titles[3] == "title"  # after normal key
+    assert frame_titles[4] == "title"  # after swipe
+    assert frame_titles[5] == "title"  # after more key (NO MORE HINT)
+
+
+def test_keypad_swipe_hint_is_not_shown_on_nontouch_device(
+    mocker, amigo, mock_page_cls
+):
+    # first check we get a hint if we have a touchscreen
+    frame_titles = get_frame_titles_resulting_from_input(
+        mocker,
+        mock_page_cls,
+        "title",
+        ["more key"],
+        use_buttons=True,  # force use of buttons so that we're using non-touch input
+        has_touch=True,
+    )
+    assert "« swipe »" in frame_titles
+
+    # now check that the same input does *not* show hint if we don't have a touchscreen
+    frame_titles = get_frame_titles_resulting_from_input(
+        mocker,
+        mock_page_cls,
+        "title",
+        ["more key"],
+        use_buttons=True,
+        has_touch=False,  # this time no touch screen
+    )
+    assert "« swipe »" not in frame_titles

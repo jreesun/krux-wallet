@@ -83,7 +83,7 @@ class Bip85(Page):
 
         key = Key(
             bip85_words,
-            self.ctx.wallet.key.multisig,
+            self.ctx.wallet.key.policy_type,
             self.ctx.wallet.key.network,
             script_type=self.ctx.wallet.key.script_type,
         )

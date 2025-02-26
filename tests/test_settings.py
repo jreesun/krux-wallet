@@ -132,20 +132,58 @@ def test_wrong_stored_cnc_settings(mocker, m5stickv):
 
 
 def test_store_init(mocker, m5stickv):
-    from krux.settings import Store, SETTINGS_FILENAME, SD_PATH
+    from krux.settings import Store, SETTINGS_FILENAME, SD_PATH, FLASH_PATH
+    import json
 
-    cases = [
-        (None, {}),
-        ("""{"settings":{"network":"test"}}""", {"settings": {"network": "test"}}),
-    ]
-    for case in cases:
-        mo = mocker.mock_open(read_data=case[0])
-        mocker.patch("builtins.open", mo)
-        s = Store()
+    DEFAULT = None
+    data_dict = None
 
-        assert isinstance(s, Store)
-        mo.assert_called_with("/" + SD_PATH + "/" + SETTINGS_FILENAME, "r")
-        assert s.settings == case[1]
+    def open_side_effect(name, read_mode):
+        print("open_side_effect", name)
+        return mocker.mock_open(read_data=data_dict.get(name, DEFAULT))()
+
+    mocker.patch("builtins.open", side_effect=open_side_effect)
+
+    sd_file = Store.get_vfs_location(SD_PATH) + SETTINGS_FILENAME
+    flash_file = Store.get_vfs_location(FLASH_PATH) + SETTINGS_FILENAME
+    sd_settings_without_key_persist = """{"settings":{"network":"test"}}"""
+    sd_settings_with_key_persist = (
+        """{"settings":{"network":"test", "persist":{"location": "sd"}}}"""
+    )
+    flash_setting = """{"settings":{"test":"True"}}"""
+
+    # 1- SD has settings, key 'persist.location' not set, flash settings None
+    data_dict = {sd_file: sd_settings_without_key_persist, flash_file: None}
+
+    s = Store()
+    assert isinstance(s, Store)
+
+    # flash location as default, loaded from SD because settings file is present
+    assert s.settings == json.loads(data_dict[sd_file])
+
+    # 2- SD has settings, key 'persist.location' not set, flash settings SET
+    data_dict = {sd_file: sd_settings_without_key_persist, flash_file: flash_setting}
+
+    s = Store()
+
+    # settings is set to flash contents
+    assert s.settings == json.loads(data_dict[flash_file])
+
+    # 3- SD has settings, key 'persist.location' SET, flash settings SET
+    data_dict = {sd_file: sd_settings_with_key_persist, flash_file: flash_setting}
+
+    s = Store()
+
+    # settings is set to SD ('persist.location' is king!)
+    assert s.settings == json.loads(data_dict[sd_file])
+
+    # 4- SD settings None, flash settings SET
+    data_dict = {sd_file: None, flash_file: flash_setting}
+
+    s = Store()
+
+    # settings is set to flash contents
+    assert s.settings == json.loads(data_dict[flash_file])
 
 
 def test_store_get():
@@ -226,37 +264,38 @@ def test_store_delete():
 
 
 def test_store_update_file_location(mocker):
-    ms, mr = mocker.Mock(), mocker.Mock()
-    mocker.patch("os.stat", ms)
+    mr = mocker.Mock()
     mocker.patch("os.remove", mr)
     from krux.settings import Store, SD_PATH, FLASH_PATH, SETTINGS_FILENAME
 
     s = Store()
 
     # default is /flash/
-    assert s.file_location == "/" + FLASH_PATH + "/"
+    assert s.file_location == Store.get_vfs_location(FLASH_PATH)
 
     # from flash to sd removes /flash/settings.json
     s.update_file_location(SD_PATH)
-    assert s.file_location == "/" + SD_PATH + "/"
-    ms.assert_called_once_with("/" + FLASH_PATH + "/" + SETTINGS_FILENAME)
-    mr.assert_called_once_with("/" + FLASH_PATH + "/" + SETTINGS_FILENAME)
-    ms.reset_mock()
+    assert s.file_location == Store.get_vfs_location(SD_PATH)
+    mr.assert_called_once_with(Store.get_vfs_location(FLASH_PATH) + SETTINGS_FILENAME)
     mr.reset_mock()
 
     # from sd to flash removes /sd/settings.json
     s.update_file_location(FLASH_PATH)
-    assert s.file_location == "/" + FLASH_PATH + "/"
-    ms.assert_called_once_with("/" + SD_PATH + "/" + SETTINGS_FILENAME)
-    mr.assert_called_once_with("/" + SD_PATH + "/" + SETTINGS_FILENAME)
-    ms.reset_mock()
+    assert s.file_location == Store.get_vfs_location(FLASH_PATH)
+    mr.assert_called_once_with(Store.get_vfs_location(SD_PATH) + SETTINGS_FILENAME)
     mr.reset_mock()
 
-    # updating with existing file_location does nothing
+    # updating with existing file_location also tries to remove from the other location
+    # case flash
     s.update_file_location(FLASH_PATH)
-    assert s.file_location == "/" + FLASH_PATH + "/"
-    ms.assert_not_called()
-    mr.assert_not_called()
+    assert s.file_location == Store.get_vfs_location(FLASH_PATH)
+    mr.assert_called_once_with(Store.get_vfs_location(SD_PATH) + SETTINGS_FILENAME)
+    mr.reset_mock()
+
+    # case SD
+    s.update_file_location(SD_PATH)
+    assert s.file_location == Store.get_vfs_location(SD_PATH)
+    mr.assert_called_once_with(Store.get_vfs_location(FLASH_PATH) + SETTINGS_FILENAME)
 
 
 def test_store_save_settings(mocker):

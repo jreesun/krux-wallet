@@ -227,13 +227,23 @@ class Display:
     def to_landscape(self):
         """Changes the rotation of the display to landscape"""
         if self.portrait:
-            lcd.rotation(LANDSCAPE)
+            lcd.rotation(
+                (LANDSCAPE + 2) % 4
+                if hasattr(Settings().hardware, "display")
+                and getattr(Settings().hardware.display, "flipped_orientation", False)
+                else LANDSCAPE
+            )
             self.portrait = False
 
     def to_portrait(self):
         """Changes the rotation of the display to portrait"""
         if not self.portrait:
-            lcd.rotation(PORTRAIT)
+            lcd.rotation(
+                (PORTRAIT + 2) % 4
+                if hasattr(Settings().hardware, "display")
+                and getattr(Settings().hardware.display, "flipped_orientation", False)
+                else PORTRAIT
+            )
             self.portrait = True
 
     def to_lines(self, text, max_lines=None):
@@ -365,7 +375,7 @@ class Display:
         bg_color=theme.bg_color,
         info_box=False,
         max_lines=None,
-    ):
+    ) -> int:
         """Draws text horizontally-centered on the display, at the given offset_y"""
         lines = (
             text if isinstance(text, list) else self.to_lines(text, max_lines=max_lines)
@@ -437,31 +447,41 @@ class Display:
         """Maximum menu items the display can fit"""
         return (self.height() - line_offset) // (2 * FONT_HEIGHT)
 
-    def render_image(self, img, compact=False):
+    def render_image(self, img, title_lines=0, double_subtitle=False):
         """Renders the image based on the board type."""
         board_type = board.config["type"]
 
-        if not compact:
-            if board_type == "m5stickv":
-                img.lens_corr(strength=1.0, zoom=0.56)
-                lcd.display(img, oft=(0, 0), roi=(68, 52, 185, 135))
-            elif board_type == "amigo":
-                x_offset = 40 if self.flipped_x_coordinates else 120
-                lcd.display(img, oft=(x_offset, 40))
-            elif board_type == "cube":
-                lcd.display(img, oft=(0, 0), roi=(48, 0, 224, 240))
-            else:
-                lcd.display(img, oft=(0, 0), roi=(8, 0, 304, 240))
-        else:
-            if board_type == "m5stickv":
-                lcd.display(img, oft=(24, 0), roi=(68, 52, 185, 135))
-            elif board_type == "amigo":
-                x_offset = 40 if self.flipped_x_coordinates else 120
-                lcd.display(img, oft=(x_offset, 40))
-            elif board_type == "cube":
-                lcd.display(img, oft=(24, 0), roi=(67, 0, 186, 240))
-            else:
-                lcd.display(img, oft=(26, 0), roi=(28, 0, 264, 240))
+        # Initialize offset and region components
+        offset_x, offset_y = 0, 0
+        region_x, region_y, region_w, region_h = 8, 0, 304, 240
+
+        if board_type == "amigo":
+            offset_x = 40 if self.flipped_x_coordinates else 120
+            offset_y = 40
+            region_x, region_y, region_w, region_h = 0, 0, 320, 240
+        elif board_type == "m5stickv":
+            # Apply lens correction and update img reference
+            img = img.lens_corr(strength=1.0, zoom=0.56)
+            region_x, region_y, region_w, region_h = 68, 52, 185, 135
+        elif board_type == "cube":
+            region_x, region_y, region_w, region_h = 48, 0, 224, 240
+
+        # Adjust for title if needed for boards with height < 320px
+        if title_lines and board_type != "amigo":
+            message_height = DEFAULT_PADDING + FONT_HEIGHT * title_lines
+            offset_x += message_height
+            region_x += message_height
+            region_w -= message_height
+            # Adjust bottom padding for double subtitle
+            if double_subtitle and board_type != "m5stickv":
+                # Extra cut on Cube to fit progress bar
+                # and entropy measurement on flash filling
+                region_w -= FONT_HEIGHT
+
+        # Pass precomputed values as tuples
+        lcd.display(
+            img, oft=(offset_x, offset_y), roi=(region_x, region_y, region_w, region_h)
+        )
 
 
 display = Display()

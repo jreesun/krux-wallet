@@ -39,7 +39,7 @@ Some stores ship the Maix Dock with soldered pin connectors that do not fit into
 </i>
 
 ### M5StickV
-<img src="../img/maixpy_m5stickv/logo-125.png" align="right" width="75">
+<img src="../img/maixpy_m5stickv/logo-250.png" align="right" style="width: 15%;">
 
 Below is a list of some distributors where you can find this device:
 
@@ -56,7 +56,7 @@ Below is a list of some distributors where you can find this device:
 <div style="clear: both"></div>
 
 ### Maix Amigo
-<img src="../img/maixpy_amigo/logo-150.png" align="right">
+<img src="../img/maixpy_amigo/logo-300.png" align="right" style="width: 16%;">
 
 Below is a list of some distributors where you can find this device:
 
@@ -69,7 +69,7 @@ Below is a list of some distributors where you can find this device:
 <div style="clear: both"></div>
 
 ### Yahboom k210 module
-<img src="../img/maixpy_yahboom/logo-156.png" align="right" width="116">
+<img src="../img/maixpy_yahboom/logo-312.png" align="right" style="width: 16%;">
 
 It comes with a compatible 32G card, an USB card reader, one PH2.0 4Pin male-to-male connector and one PH2.0 female adapter (to connect to a [thermal printer](#optional-ttl-serial-thermal-printer)). Below is a list of some distributors where you can find this device:
 
@@ -81,7 +81,7 @@ It comes with a compatible 32G card, an USB card reader, one PH2.0 4Pin male-to-
 <div style="clear: both"></div>
 
 ### Maix Cube
-<img src="../img/maixpy_cube/logo-200.png" align="right" width="120">
+<img src="../img/maixpy_cube/logo-400.png" align="right" style="width: 18%;">
 
 Below is a list of some distributors where you can find this device:
 
@@ -95,7 +95,7 @@ Below is a list of some distributors where you can find this device:
 <div style="clear: both"></div>
 
 ### WonderMV
-<img src="../img/maixpy_wonder_mv/logo-152.png" align="right" width="116">
+<img src="../img/maixpy_wonder_mv/logo-304.png" align="right" style="width: 16%;">
 
 It comes with a compatible 32G card, an USB card reader, and two Molex 51004 4-pin male-to-male cable (to connect to a [thermal printer](#optional-ttl-serial-thermal-printer)). Below is a list of some distributors where you can find this device:
 
@@ -108,7 +108,7 @@ It comes with a compatible 32G card, an USB card reader, and two Molex 51004 4-p
 <div style="clear: both"></div>
 
 ### Maix Dock and Maix Bit
-<img src="../img/maixpy_dock/logo-151.png" align="right" width="144">
+<img src="../img/maixpy_dock/logo-302.png" align="right" style="width: 16%;">
 
 For the DIYers, the Maix Dock and Maix Bit are also supported but will require sourcing the parts individually and building the device yourself.
 
