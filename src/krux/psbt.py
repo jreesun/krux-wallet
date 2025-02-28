@@ -372,7 +372,6 @@ class PSBTSigner:
             )
         fee = inp_amount - spend_amount - self_amount - change_amount
         if not self.wallet.is_miniscript():
-            # TODO: Tadeu - Add miniscript support to SatsVB
             satvb = fee / SatsVB.get_vbytes(
                 self.policy,
                 output_policy_count,

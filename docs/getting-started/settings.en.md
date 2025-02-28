@@ -89,7 +89,7 @@ Some Maix Amigo screens are different, here you can customize the `BGR Colors`, 
 <img src="../../img/maixpy_m5stickv/printer-options-250.png" align="right" class="m5stickv">
 <img src="../../img/maixpy_amigo/printer-options-300.png" align="right" class="amigo">
 
-You can set up a TTL serial thermal printer or tell Krux to store a GRBL CNC instructions file on a SD card to machine QR codes.
+You can set up a TTL serial thermal printer or tell Krux to store a GRBL CNC instructions file on an SD card to machine QR codes.
 
 #### CNC
 Define several machining parameters according to the desired size, material you'll use, and your CNC characteristics and capabilities.
@@ -97,7 +97,7 @@ Define several machining parameters according to the desired size, material you'
 #### Thermal
 Printers can come with different baudrates from the manufacturer. By default, Krux assumes the connected printer will have a baudrate of `9600`. If yours is different, you can change it here.
 
-Also setup the TX Pin you'll use (e.g. 35 for M5StickV and 7 for Maix Amigo) and tweak other parameters according to your printer recommendations. For most printers you will only need to connect 2 cables, the device TX to the printer RX and ground. Current uses of printing are listed [here](features/printing.md). Consult the [parts list](../parts.md/#optional-ttl-serial-thermal-printer) for supported printers.
+Also setup the TX Pin you'll use (e.g., 35 for M5StickV and 7 for Maix Amigo) and tweak other parameters according to your printer recommendations. For most printers you will only need to connect 2 cables, the device TX to the printer RX and ground. Current uses of printing are listed [here](features/printing.md). Consult the [parts list](../parts.md/#optional-ttl-serial-thermal-printer) for supported printers.
 
 #### Driver
 Here you choose between Thermal, CNC or none (default). Leave this setting to "none" if you won't use a printer and don't want to be bothered by print prompts.
@@ -108,6 +108,8 @@ Here you choose between Thermal, CNC or none (default). Leave this setting to "n
 <img src="../../img/maixpy_amigo/touchscreen-300.png" align="right" class="amigo">
 
 If your device has touchscreen you can change the touch detection threshold. If it is being too sensitive or detecting false or ghost touches, you should increase the threshold value, making it less sensitive. The other way is also valid, reduce the threshold to make the screen more sensitive to touches.
+
+**Tip**: If your Amigo or WonderMV's touchscreen is not working properly, you can disable it by turning on the device with your finger pressing the screen. This will allow you to operate the device using buttons only.
 
 <div style="clear: both"></div>
 
@@ -136,7 +138,7 @@ Set the time it takes for Krux to automatically shut down. This feature not only
 Please note that devices without batteries and power management will not shut down but will reboot instead, which is sufficient to unload private keys.
 
 #### TC Flash Hash at Boot
-Chose if you would like to run [Tamper Check Flash Hash](features/tamper-detection.en.md) every time the device is powered on.
+Chose if you would like to run [Tamper Check Flash Hash](features/tamper-detection.md) every time the device is powered on.
 
 Activating *TC Flash Hash* at boot helps prevent unauthorized use by requiring the *TC Code*. But is important to note, unlike a PIN, the TC Code does not provide access control over USB. This means that the device's memory remains accessible for reading and writing via USB, allowing it to be flashed with firmware that does not require the *TC Code*, which could then allow unauthorized use through its human interface.
 
@@ -144,7 +146,7 @@ Activating *TC Flash Hash* at boot helps prevent unauthorized use by requiring t
 When "Hide Mnemonics" mode is set to "True", your device will not display private key data or backup tools when a key is loaded. It will only show public key information and allow signing operations.
 
 #### Tamper Check Code
-Create or modify a Tamper Check Code. This code will be required every time [Tamper Check Flash Hash](features/tamper-detection.en.md) is executed.
+Create or modify a Tamper Check Code. This code will be required every time [Tamper Check Flash Hash](features/tamper-detection.md) is executed.
 
 After creating the code, you will be prompted to fill the empty memory spaces with random entropy from the camera. This step is important to make *TC Flash Hash* more resilient to data manipulation by eliminating empty memory spaces that could be exploited in a sophisticated tamper attempt.
 

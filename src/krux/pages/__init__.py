@@ -427,7 +427,7 @@ class Page:
         return Settings().hardware.printer.driver != "none"
 
     def has_sd_card(self):
-        """Checks if the device has a SD card inserted"""
+        """Checks if the device has an SD card inserted"""
         self.ctx.display.clear()
         self.ctx.display.draw_centered_text(t("Checking for SD card.."))
         try:

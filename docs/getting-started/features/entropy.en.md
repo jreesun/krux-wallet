@@ -1,6 +1,6 @@
 
 ## Why Does Krux Say the Entropy of My Fifty Dice Rolls Does Not Contain 128 Bits of Entropy?
-This question, frequently raised in Krux chat groups, highlights the need to clarify the concepts and tools used by Krux to help users detect possible issues in the mnemonic creation procedure. Tools in Krux were designed to help users understand the concepts involved in the process, present statistics and indicators, and encourage users to experiment and evaluate results. This way, users learn about best practices in key generation. Below, we will dive deeper into entropy concepts to better support users in the fundamental requirement for sovereign self-custody, which is to build up knowledge.
+We want Krux to help users understand the concepts involved in the process, present statistics and indicators, and encourage users to experiment and evaluate results. This way, users learn about best practices in key generation. Below, we delve deeper into the concepts of entropy to better support users' knowledge of sovereign self-custody.
 
 ## Entropy in Dice Rolls
 
@@ -8,15 +8,15 @@ Rolling dice and collecting the resulting values can be an effective method for 
 
 ### Entropy Definitions
 
-Entropy, a fundamental concept in various scientific disciplines, measures the degree of disorder or uncertainty within a system. This notion is interpreted differently across fields, leading to distinct types of entropy: mechanical entropy, Shannon's entropy, and cryptographic entropy.
+Entropy, a fundamental concept in various scientific disciplines, is most commonly associated with a state of disorder, randomness, or uncertainty within a system. We use the concepts from [thermodynamics entropy](https://en.wikipedia.org/wiki/Entropy_(classical_thermodynamics)), [Shannon's entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)), and [cryptographic entropy](https://en.wikipedia.org/wiki/Entropy_(computing)).
 
-Mechanical entropy, rooted in thermodynamics and statistical mechanics, quantifies the disorder in a physical system. It describes how energy is distributed among the particles in a system, reflecting the system's tendency towards equilibrium and maximum disorder.
+- **Thermodynamics entropy** deals with heat and work. It describes how energy is distributed among the particles in a system, reflecting the system's tendency towards equilibrium and maximum disorder.
 
-Shannon's entropy, from information theory, measures the uncertainty or information content in a message or data source. Introduced by Claude Shannon, it quantifies the average amount of information produced by a stochastic source of data, indicating how unpredictable the data is.
+- **Shannon's entropy**, from information theory, measures the uncertainty or information content in a message or data source. It quantifies the average amount of information produced by a stochastic source of data, indicating how unpredictable the data is.
 
-Cryptographic entropy, crucial in security, refers to the unpredictability and randomness required for secure cryptographic keys and processes. High cryptographic entropy ensures that keys are difficult to predict or reproduce, providing robustness against attacks.
+- **Cryptographic entropy**, crucial in security, refers to the unpredictability and randomness required for secure cryptographic keys and processes. High cryptographic entropy ensures that keys are difficult to predict or reproduce, providing robustness against attacks.
 
-While mechanical entropy deals with physical systems, Shannon's entropy focuses on information content, and cryptographic entropy emphasizes security through randomness.
+While thermodynamics entropy deals with physical systems, Shannon's entropy focuses on information content, and cryptographic entropy emphasizes security through randomness.
 
 ### Measuring Dice Rolls Entropy
 Entropy is a theoretical measure and is not directly measurable from a single roll but rather from the probability distribution of outcomes over many rolls. We can use Shannon's formula for theoretical and empirical calculations. Entropy $S$ can be quantified with:

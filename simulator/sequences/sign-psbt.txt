@@ -1,4 +1,4 @@
-include _load-12-word-mnemonic.txt
+include _load-12-word-mnemonic_testnet.txt
 
 # Navigate to Sign
 x2 press BUTTON_C
@@ -7,20 +7,16 @@ press BUTTON_A
 screenshot sign-options.png
 
 # Sign PSBT, load QR code
-x2 press BUTTON_A
+press BUTTON_A
 
-qrcode singlesig-psbt-p1of5.png
-wait 0.1
-qrcode singlesig-psbt-p2of5.png
-wait 0.1
-qrcode singlesig-psbt-p3of5.png
-wait 0.1
-qrcode singlesig-psbt-p4of5.png
-wait 0.1
-qrcode singlesig-psbt-p5of5.png
+screenshot sign-psbt-from.png
+
+press BUTTON_A
+
+qrcode singlesig-psbt-testnet.png
 wait 0.1
 
-# screenshot sign-psbt-info-1.png
+screenshot sign-psbt-info-1.png
 
 press BUTTON_A
 
@@ -32,9 +28,6 @@ press BUTTON_A
 
 press BUTTON_A
 
-# screenshot sign-psbt-info-4.png
-
-press BUTTON_A
 
 screenshot sign-psbt-sign-prompt.png
 

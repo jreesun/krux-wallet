@@ -174,7 +174,7 @@ Now you will be able to select if you do a flash process or need to do an airgap
 
 <img width="640" src="/krux/img/krux-installer/unzip.png" alt="Krux-Installer unzip" />
 
-Click on [Flash with](#flash-with) to install via USB or [Air-gapped update with](#air-gapped-update-with) to perform upgrades via a SD card.
+Click on [Flash with](#flash-with) to install via USB or [Air-gapped update with](#air-gapped-update-with) to perform upgrades via an SD card.
 
 #### Flash with
 

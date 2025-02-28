@@ -7,7 +7,7 @@ Here are some useful tools that are available as soon as Krux starts! These are 
 <img src="../../../img/maixpy_m5stickv/check-sd-card-250.png" align="right" class="m5stickv">
 <img src="../../../img/maixpy_amigo/check-sd-card-300.png" align="right" class="amigo">
 
-You can check if a SD card can be detected and read by your device and explore its content. If there are too many files to fit on one screen, swipe up :material-gesture-swipe-up: or down :material-gesture-swipe-down: to navigate between the screens if your device has a touchscreen.
+You can check if an SD card can be detected and read by your device and explore its content. If there are too many files to fit on one screen, swipe up :material-gesture-swipe-up: or down :material-gesture-swipe-down: to navigate between the screens if your device has a touchscreen.
 
 <div style="clear: both"></div>
 
@@ -54,7 +54,7 @@ This is an interesting tool to visualize the effects of filling the memory with 
 <div style="clear: both"></div>
 
 #### TC Flash Hash
-*Tamper Check (TC) Flash Hash* is a tamper detection mechanism that enables you to verify if the flash memory content has been altered. To use it first, need to create a *Tamper Check (TC) Code* on `Settings -> Security -> Tamper Check Code`.
+*Tamper Check (TC) Flash Hash* is a tamper detection mechanism that enables you to verify if the flash memory content has been altered. To use it first, need to create a *Tamper Check (TC) Code* on **Settings -> Security -> Tamper Check Code**.
 *TC Flash Hash* will hash *TC Code*, K210 chip's unique ID and the content of the whole internal flash creating a tamper indicator that is unique to each device, represented by a memorable image and two sets of two words.
 
 More information on [Tamper Detection page](tamper-detection.md).

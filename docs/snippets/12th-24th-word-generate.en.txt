@@ -1,1 +1,1 @@
-On your 12th or 24th word, you can leave it blank to have Krux generate the final checksum word of your mnemonic for you. This is useful when you choose a manual method to generate your mnemonic and want the final BIP-39 checksum word to be valid.
+On your 12th or 24th word, you can leave it blank to have Krux generate the final checksum word of your mnemonic for you. This is useful when you choose a manual method to generate your mnemonic and want the final BIP39 checksum word to be valid.

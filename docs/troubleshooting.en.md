@@ -117,9 +117,9 @@ camera-scan-tips.en.txt
 
 If Krux is recognizing that it sees a QR code but is displaying an error message after reading it, the likely reason is that the QR code is not in a format that Krux works with. We have listed the supported formats below:
 
-For BIP-39 mnemonics:
+For BIP39 mnemonics:
 
-- BIP-39 Plaintext (Used by Krux and [https://iancoleman.io/bip39/](https://iancoleman.io/bip39/))
+- BIP39 Plaintext (Used by Krux and [https://iancoleman.io/bip39/](https://iancoleman.io/bip39/))
 - SeedSigner [SeedQR and CompactSeedQR](https://github.com/SeedSigner/seedsigner/blob/dev/docs/seed_qr/README.md) Formats
 - [UR Type `crypto-bip39`](https://github.com/BlockchainCommons/Research/blob/master/papers/bcr-2020-006-urtypes.md)
 - Encrypted QR Code (Format created by Krux, [more information here](getting-started/features/encrypted-mnemonics.md))

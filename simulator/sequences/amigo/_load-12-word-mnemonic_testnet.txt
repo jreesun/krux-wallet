@@ -1,0 +1,26 @@
+include _wait-for-logo.txt
+
+# Navigate to via QR
+x3 press BUTTON_A
+
+qrcode 12-word-mnemonic.png
+wait 0.5
+
+# Confirm words
+press BUTTON_A
+
+# Go customize
+x2 press BUTTON_B
+press BUTTON_A
+
+# Go Network testnet
+press BUTTON_A
+press BUTTON_B
+press BUTTON_A
+
+# Go back
+press BUTTON_C
+press BUTTON_A
+
+# Load wallet
+press BUTTON_A

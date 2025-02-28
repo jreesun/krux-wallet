@@ -129,6 +129,15 @@ class FlashTools(Page):
                 color,
                 fill=True,
             )
+            # Uncomment this lines to see flash_map on simulator
+            # y_pos = offset_y + row * image_block_size
+            # self.ctx.display.fill_rectangle(
+            #     column * image_block_size,
+            #     y_pos,
+            #     image_block_size,
+            #     image_block_size,
+            #     color,
+            # )
             column += 1
             if column >= FLASH_ROWS:
                 y_pos = offset_y + row * image_block_size

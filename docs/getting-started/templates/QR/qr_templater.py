@@ -353,14 +353,14 @@ def main():
 
     else:
 
-        # Look for an argument with vX (e.g. v4) to specify the version
+        # Look for an argument with vX (e.g., v4) to specify the version
         version = None
         for arg in sys.argv:
             if arg.startswith("v") and arg[1:].isdigit():
                 version = int(arg[1:])
                 break
         if version is None:
-            print("Please specify a version (e.g. 'v4') to generate the template.")
+            print("Please specify a version (e.g., 'v4') to generate the template.")
             return
         
         draw_dots = ("dots" in sys.argv)

@@ -1,16 +1,47 @@
 include _load-12-word-mnemonic.txt
 
-# Navigate to BIP85
+# Navigate to Wallet
 x2 press BUTTON_B
 press BUTTON_A
 
-x2 press BUTTON_C
-x3 press BUTTON_A
+screenshot wallet_home_options.png
 
+# Navigate to BIP85
+x2 press BUTTON_C
+x2 press BUTTON_A
+
+screenshot bip85-options.png
+
+x2 press BUTTON_A
 screenshot bip85-child-index.png
 
+# index 1 Go
 press BUTTON_A
 press BUTTON_C
 press BUTTON_A
 
 screenshot bip85-load-child.png
+
+# No to load child mnemonic
+press BUTTON_B
+press_amigo_only BUTTON_A
+
+# Enter BIP85
+x2 press BUTTON_A
+
+# Base64 Password
+press BUTTON_B
+press BUTTON_A
+
+# index 1 Go
+press BUTTON_A
+press BUTTON_C
+press BUTTON_A
+
+screenshot bip85-password-len.png
+
+# Password Length Go
+press BUTTON_C
+press BUTTON_A
+
+screenshot bip85-password-created.png

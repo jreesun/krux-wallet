@@ -13,6 +13,10 @@ screenshot flash-tools.png
 # Flash Map
 press BUTTON_A
 
+# wait generation of the map (slow on simulator)
+# remember to uncomment lines on flash_tools.py
+wait 5
+
 screenshot flash-map.png
 
 # Back

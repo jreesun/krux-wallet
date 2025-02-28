@@ -8,15 +8,11 @@
 | Screen size / resolution | 1.14" / 135*240 | 3.5" / 320*480 | 2.4" / 240*320 | 2.4" / 240*320 | 2" / 240*320 | 1.3" / 240*240 | 2" / 240*320 |
 | Brightness control | :white_check_mark: | :x: | :x: | :x: | :x: | :white_check_mark: | :white_check_mark: |
 | Device size | 48\*24\*22mm | 104\*63\*17mm | 98\*59\*18mm | 69\*84\*41mm | 57\*41\*17mm | 40\*40\*16mm | 59\*41\*17mm |
-| Touchscreen  | :x: | Capacitive | :x: | :x: | Capacitive | :x: | Capacitive |
-| Camera [:material-information:{ title="Anti-glare mode" }](#camera-info)  | `OV7740` | `OV7740` rear<br>`GC0328` front | `GC0328` | `OV2640` or<br>`OV5642` | `OV2640` <i style="font-size: 85%">(VER:1.0)</i> or<br>`GC2145` <i style="font-size: 85%">(VER:1.1)</i> | `OV7740` | `GC2145` |
+| Touchscreen | :x: | Capacitive | :x: | :x: | Capacitive | :x: | Capacitive |
+| Camera | `OV7740` | `OV7740` rear<br>`GC0328` front | `GC0328` | `OV2640` or<br>`OV5642` | `OV2640` <i style="font-size: 85%">(VER:1.0)</i> or<br>`GC2145` <i style="font-size: 85%">(VER:1.1)</i> | `OV7740` | `GC2145` |
 | Battery  | 200mAh | 520mAh | :x: | :x: | :x: | 200mAh | :x: |
 | Requirements | None | None | [Rotary encoder](https://duckduckgo.com/?q=ky-040)<br> [3D printed case](https://github.com/selfcustody/DockEncoderCase)<br> Soldering<br>Assembly | Buttons<br> [3D printed case](https://github.com/selfcustody/MaixBitCase)<br> Soldering<br>Assembly | None | None | None |
 | Warnings  | [:material-numeric-1-circle:{ title="M5StickV and USB-C" }](#m5stickv-info) | [:material-numeric-2-circle:{ title="Maix Amigo screens" }](#amigo-info) | [:material-numeric-3-circle:{ title="Maix Dock and soldered pin" }](#dock-info) | Camera has<br> lens distortion | Micro USB | 3-Way button | None |
-
-<i style="font-size: 85%">:material-information:{id="camera-info"}:
-Only `OV7740`, `OV2640` and `GC2145` have an anti-glare mode to better capture images from high brightness screens or with incident light.
-</i>
 
 <i style="font-size: 85%">:material-numeric-1-circle:{id="m5stickv-info"}:
 ----8<----

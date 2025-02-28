@@ -28,7 +28,7 @@ locale=$2
 # Create screenshots directory
 rm -rf screenshots && mkdir -p screenshots
 
-# Create a sd folder and a fresh settings.json file
+# Create an sd folder and a fresh settings.json file
 mkdir -p sd && rm -f sd/settings.json
 echo "{\"settings\": {\"i18n\": {\"locale\": \"$locale\"}}}" > sd/settings.json
 
@@ -57,7 +57,7 @@ poetry run poe simulator --sequence sequences/extended-public-key-wsh.txt  --dev
 poetry run poe simulator --sequence sequences/wallet-descriptor-wsh.txt  --device $device
 poetry run poe simulator --sequence sequences/wallet-descriptor-wpkh.txt  --device $device
 poetry run poe simulator --sequence sequences/wallet-descriptor-exp-tr-minis.txt  --device $device
-poetry run poe simulator --sequence sequences/bip85.txt  --device $device
+poetry run poe simulator --sequence sequences/bip85.txt --sd --device $device
 poetry run poe simulator --sequence sequences/scan-address.txt --device $device
 poetry run poe simulator --sequence sequences/list-address.txt --device $device
 poetry run poe simulator --sequence sequences/sign-psbt.txt  --sd --device $device
