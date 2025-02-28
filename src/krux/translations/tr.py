@@ -194,6 +194,7 @@ translation_array = [
     "Numaralar",
     "Sekizlik",
     "Diğer Formatlar",
+    "Parlaklığı değiştirmek için PAGE",
     "PBKDF2 Yinelemesi",
     "İşaretlenmiş noktaları siyaha boyayın ki tespit edilebilsinler.",
     "Kağıt Genişliği",

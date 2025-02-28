@@ -46,6 +46,7 @@ from ..display import (
     FONT_WIDTH,
     NARROW_SCREEN_WITH,
     STATUS_BAR_HEIGHT,
+    BOTTOM_LINE,
 )
 from ..qr import to_qr_codes
 from ..krux_settings import t, Settings
@@ -216,15 +217,42 @@ class Page:
         """
         done = False
         i = 0
-        code_generator = to_qr_codes(data, self.ctx.display.qr_data_width(), qr_format)
+
+        # Precompute display-related values
+        display_width = self.ctx.display.width()
+        display_height = self.ctx.display.height()
+        is_portrait = display_height > display_width
+        qr_offset_val = self.ctx.display.qr_offset()
+        qr_data_width = self.ctx.display.qr_data_width()
+
         self.ctx.display.clear()
+
+        # Prepare subtitle components
+        subtitle_template = None
+        if not title:
+            self.ctx.display.draw_hcentered_text(t("Part"), qr_offset_val)
+            qr_offset_val += FONT_HEIGHT
+            subtitle_template = "{} / {}"
+            tit_len = 1
+        else:
+            # Draws permanent title
+            tit_len = self.ctx.display.draw_hcentered_text(title, qr_offset_val)
+        cursor_y = qr_offset_val + tit_len * FONT_HEIGHT
+        if cursor_y < BOTTOM_LINE and is_portrait:
+            cursor_y += BOTTOM_LINE
+            cursor_y //= 2
+            self.ctx.display.draw_hcentered_text(
+                t("PAGE to toggle brightness"), cursor_y, theme.frame_color
+            )
+
+        code_generator = to_qr_codes(data, qr_data_width, qr_format)
         qr_foreground = WHITE if theme.bg_color == WHITE else None
         extra_debounce_flag = True
         self.ctx.input.buttons_active = True
+        code = None
+        num_parts = 0
+        btn = None
         while not done:
-            code = None
-            num_parts = 0
-            btn = None
             try:
                 code, num_parts = next(code_generator)
             except:
@@ -232,46 +260,43 @@ class Page:
                     data, self.ctx.display.qr_data_width(), qr_format
                 )
                 code, num_parts = next(code_generator)
+
+            # Draw QR code
             if qr_foreground:
                 self.ctx.display.draw_qr_code(0, code, light_color=qr_foreground)
             else:
                 self.ctx.display.draw_qr_code(0, code)
-            subtitle = (
-                (t("Part") + "\n%d / %d" % (i + 1, num_parts)) if not title else title
-            )
-            offset_y = self.ctx.display.qr_offset()
-            if subtitle and self.ctx.display.height() > self.ctx.display.width():
-                offset_y += FONT_HEIGHT
-                # Clean area below QR code to refresh subtitle/part
+
+            # Handle subtitle
+            if subtitle_template and is_portrait:
+                subtitle = subtitle_template.format(i + 1, num_parts)
                 self.ctx.display.fill_rectangle(
-                    0,
-                    offset_y,
-                    self.ctx.display.width(),
-                    self.ctx.display.height() - offset_y,
-                    theme.bg_color,
+                    0, qr_offset_val, display_width, FONT_HEIGHT, theme.bg_color
                 )
-                self.ctx.display.draw_hcentered_text(subtitle, offset_y)
+                self.ctx.display.draw_hcentered_text(subtitle, qr_offset_val)
                 i = (i + 1) % num_parts
+
+            # Debounce handling
             if extra_debounce_flag:
-                # Animated QR codes disable debounce
-                # so this is required to avoid double presses
                 time.sleep_ms(self.ctx.input.debounce_value)
                 self.ctx.input.reset_ios_state()
                 extra_debounce_flag = False
+
+            # Button processing
             btn = self.ctx.input.wait_for_button(num_parts == 1)
+
             if btn in TOGGLE_BRIGHTNESS:
                 if qr_foreground == WHITE:
                     qr_foreground = DARKGREY
-                elif not qr_foreground:
+                elif qr_foreground is None:
                     qr_foreground = WHITE
-                elif qr_foreground == DARKGREY:
+                else:
                     qr_foreground = None
                 extra_debounce_flag = True
             elif btn in PROCEED:
                 if self.ctx.input.touch is not None:
                     self.ctx.input.buttons_active = False
                 done = True
-            # interval done in input.py using timers
 
     def display_mnemonic(
         self, mnemonic: str, suffix="", display_mnemonic: str = None, fingerprint=""

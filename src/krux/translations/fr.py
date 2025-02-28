@@ -194,6 +194,7 @@ translation_array = [
     "Nombres",
     "Octale",
     "Autres formats",
+    "PAGE pour ajuster la luminosité",
     "Itér. PBKDF2",
     "Noircissez les points perforés afin qu'ils puissent être détectés.",
     "Largeur du papier",

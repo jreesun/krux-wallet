@@ -450,9 +450,9 @@ class SeedQRView(Page):
                 def toggle_brightness():
                     if self.qr_foreground == WHITE:
                         self.qr_foreground = DARKGREY
-                    elif not self.qr_foreground:
+                    elif self.qr_foreground is None:
                         self.qr_foreground = WHITE
-                    elif self.qr_foreground == DARKGREY:
+                    else:
                         self.qr_foreground = None
 
                 self.draw_grided_qr(mode)
@@ -471,6 +471,8 @@ class SeedQRView(Page):
                         mode -= 1
                         mode %= 5
                         self.lr_index = 0
+                elif button == BUTTON_PAGE:
+                    toggle_brightness()
                 if button in (BUTTON_ENTER, BUTTON_TOUCH):
                     if mode in (LINE_MODE, REGION_MODE, ZOOMED_R_MODE):
                         self.lr_index += 1

@@ -194,6 +194,7 @@ translation_array = [
     "Números",
     "Octales",
     "Otros Formatos",
+    "PAGE para alternar el brillo",
     "Iter. PBKDF2",
     "Pinte los puntos perforados de negro para que puedan ser detectados.",
     "Ancho del Papel",

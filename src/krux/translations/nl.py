@@ -194,6 +194,7 @@ translation_array = [
     "Nummers",
     "Octaal",
     "Andere indelingen",
+    "PAGE om de helderheid aan of uit te schakelen",
     "PBKDF2 iter.",
     "Maak geperforeerde stippen zwart zodat ze worden gedetecteerd.",
     "Papier breedte",

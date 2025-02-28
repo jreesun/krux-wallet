@@ -194,6 +194,7 @@ translation_array = [
     "Số",
     "Bát phân",
     "Các định dạng khác",
+    "PAGE để chuyển đổi độ sáng",
     "Lặp lại PBKDF2",
     "Tô các chấm đục lỗ màu đen để chúng có thể được phát hiện.",
     "Chiều rộng giấy",
